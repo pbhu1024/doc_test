@@ -100,3 +100,28 @@
 [data-md-color-scheme="slate"] .md-typeset table tbody tr:nth-child(even) {
   background-color: rgba(139, 92, 246, 0.06);
 }
+
+/* ============================================
+   强制标签栏始终可见（子页面滚动不隐藏）
+   ============================================ */
+/* 顶部标题栏也吸顶，标签栏贴在它下面 */
+.md-header {
+  position: sticky !important;
+  top: 0 !important;
+}
+
+/* 标签栏吸顶在标题栏下方 */
+.md-tabs {
+  position: sticky !important;
+  top: 2.4rem !important;
+  z-index: 5 !important;
+}
+
+/* 禁止 header 滚动隐藏动画干扰标签栏 */
+.md-header[data-md-state="hidden"] {
+  transform: none !important;
+}
+
+.md-header--shadow {
+  box-shadow: 0 0 0.4rem rgba(0,0,0,.1), 0 0.4rem 0.8rem rgba(0,0,0,.2) !important;
+}
