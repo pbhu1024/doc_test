@@ -27,6 +27,7 @@ theme:
 
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
     - search.highlight
