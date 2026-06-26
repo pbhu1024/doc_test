@@ -1,0 +1,26 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      
+      - run: pip install -r requirements.txt
+      
+      - name: Build and Deploy
+        run: mkdocs gh-deploy --force
