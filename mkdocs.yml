@@ -1,4 +1,4 @@
-site_name: 你的文档站点名称
+site_name: doc_test
 site_url: https://pbhu1024.github.io/doc_test/
 repo_name: pbhu1024/auto_research
 repo_url: https://github.com/pbhu1024/doc_test
@@ -6,17 +6,61 @@ repo_url: https://github.com/pbhu1024/doc_test
 theme:
   name: material
   palette:
-    primary: indigo
-    accent: indigo
+    # 暗色模式 - 赛博朋克风
+    - scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: 暗色模式
+    # 亮色模式（可选切换）
+    - scheme: default
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: 亮色模式
+
+  font:
+    text: Roboto
+    code: JetBrains Mono
+
   features:
     - navigation.tabs
     - navigation.sections
+    - navigation.top
     - search.highlight
+    - search.suggest
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - extra.css
 
 nav:
   - 首页: index.md
   - 快速开始: getting-started.md
   - API 文档: api-reference.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
 
 plugins:
   - search
