@@ -1,4 +1,4 @@
-site_name: doc_test
+site_name: Auto Research
 site_url: https://pbhu1024.github.io/doc_test/
 repo_name: pbhu1024/auto_research
 repo_url: https://github.com/pbhu1024/doc_test
@@ -13,7 +13,7 @@ theme:
       toggle:
         icon: material/weather-night
         name: 暗色模式
-    # 亮色模式（可选切换）
+    # 亮色模式
     - scheme: default
       primary: deep purple
       accent: indigo
@@ -39,9 +39,22 @@ extra_css:
   - extra.css
 
 nav:
-  - 首页: index.md
-  - 快速开始: getting-started.md
-  - API 文档: api-reference.md
+  - 首页:
+    - 项目概述: index.md
+    - 功能特性: home/features.md
+    - 系统架构: home/architecture.md
+    - 更新日志: home/changelog.md
+  - 快速开始:
+    - 安装指南: getting-started/installation.md
+    - 配置说明: getting-started/configuration.md
+    - 快速教程: getting-started/quick-tutorial.md
+    - 常见问题: getting-started/faq.md
+  - API 文档:
+    - API 概览: api/overview.md
+    - ResearchEngine: api/engine.md
+    - 数据源接口: api/datasource.md
+    - CLI 命令: api/cli.md
+    - 错误处理: api/errors.md
 
 markdown_extensions:
   - admonition
