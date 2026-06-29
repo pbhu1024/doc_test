@@ -26,4 +26,4 @@ from orca_gym import (
 
 ## 版本
 
-当前版本：**25.11.1** (PyPI: `orca-gym`)
+当前版本：**26.6.1.5** (PyPI: `orca-gym`)
