@@ -51,13 +51,6 @@ nav:
     - Gym 接口: core_concepts/gym-interface.md
     - 数据流: core_concepts/data-flow.md
     - 模型-数据优化: core_concepts/model-data-opt.md
-  - API 参考:
-    - API 概览: api_reference/index.md
-    - 核心 API: api_reference/core.md
-    - 环境: api_reference/environment.md
-    - 场景: api_reference/scene.md
-    - 传感器: api_reference/sensor.md
-    - 工具函数: api_reference/utils.md
   - 教程:
     - 🎓 新手入门:
       - 新手概览: tutorial/beginners/index.md
@@ -103,6 +96,13 @@ nav:
       - Robomimic 适配器: tutorial/tools/robomimic-adapter.md
       - Robosuite 适配器: tutorial/tools/robosuite-adapter.md
       - 地形工具: tutorial/tools/terrain-tools.md
+  - API 参考:
+    - API 概览: api_reference/index.md
+    - 核心 API: api_reference/core.md
+    - 环境: api_reference/environment.md
+    - 场景: api_reference/scene.md
+    - 传感器: api_reference/sensor.md
+    - 工具函数: api_reference/utils.md
   - 常见问题:
     - FAQ: faq/faq.md
 
