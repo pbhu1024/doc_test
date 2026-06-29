@@ -40,8 +40,9 @@ extra_css:
   - extra.css
 
 nav:
-  - 首页:
-    - 项目概述: getting-started/index.md
+  - 首页: index.md
+  - 项目概述:
+    - Overview: getting-started/index.md
     - 什么是 OrcaGym: getting-started/what-is-orcagym.md
     - 为什么选择 OrcaGym: getting-started/why-orcagym.md
     - 设计理念: getting-started/vision.md
