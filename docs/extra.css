@@ -103,33 +103,28 @@
 
 /* ============================================
    搜索弹层 z-index 修复
-   确保搜索 UI 不被标题栏/标签栏遮挡
-   层级关系: 搜索弹层 > 标题栏 > 标签栏 > 内容
-   ============================================ */
+   ============================================
+   问题根因: .md-search 设置了 position: relative 但没有显式 z-index,
+   而 .md-tabs 有 z-index: 2, 二者都是 .md-header 的子元素.
+   在同一个层叠上下文中, z-index: auto < z-index: 2,
+   因此 .md-search 及其子元素(搜索面板/结果)被 .md-tabs 遮挡.             */
 
-/* 搜索遮罩层（背景） */
-.md-search__overlay {
-  z-index: 100 !important;
-}
-
-/* 搜索内部容器（搜索结果） */
-.md-search__inner {
-  z-index: 101 !important;
+/* 搜索容器: 提升 z-index 使其高于标签栏 */
+.md-search {
+  z-index: 5 !important;
 }
 
 /* ============================================
    强制标题栏 & 标签栏始终可见
-   z-index 需低于搜索弹层（100+），否则会遮挡搜索结果
    ============================================ */
 
-/* 顶部标题栏吸顶，z-index 低于搜索弹层 */
+/* 顶部标题栏吸顶 */
 .md-header {
   position: sticky !important;
   top: 0 !important;
-  z-index: 3 !important;
 }
 
-/* 标签栏吸顶在标题栏下方，z-index 低于标题栏 */
+/* 标签栏吸顶在标题栏下方, z-index 低于搜索容器 */
 .md-tabs {
   position: sticky !important;
   top: 2.4rem !important;
