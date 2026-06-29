@@ -1,0 +1,121 @@
+site_name: Auto Research
+site_url: https://pbhu1024.github.io/doc_test/
+repo_name: pbhu1024/auto_research
+repo_url: https://github.com/pbhu1024/doc_test
+
+theme:
+  name: material
+  palette:
+    # 暗色模式 - 赛博朋克风
+    - scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: 暗色模式
+    # 亮色模式
+    - scheme: default
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: 亮色模式
+
+  font:
+    text: Roboto
+    code: JetBrains Mono
+
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - extra.css
+
+nav:
+  - 首页:
+    - 项目概述: getting-started/index.md
+    - 什么是 OrcaGym: getting-started/what-is-orcagym.md
+    - 为什么选择 OrcaGym: getting-started/why-orcagym.md
+    - 设计理念: getting-started/vision.md
+  - 快速开始:
+    - 安装指南: getting-started/installation.md
+  - 核心概念:
+    - 概览: core_concepts/index.md
+    - 系统架构: core_concepts/architecture.md
+    - Gym 接口: core_concepts/gym-interface.md
+    - 数据流: core_concepts/data-flow.md
+    - 模型-数据优化: core_concepts/model-data-opt.md
+  - API 参考:
+    - API 概览: api_reference/index.md
+    - 核心 API: api_reference/core.md
+    - 环境: api_reference/environment.md
+    - 场景: api_reference/scene.md
+    - 传感器: api_reference/sensor.md
+    - 工具函数: api_reference/utils.md
+  - 教程:
+    - 物理仿真:
+      - 概览: tutorial/physics/index.md
+      - 接触与力: tutorial/physics/contacts-forces.md
+      - 等式约束: tutorial/physics/equality-constraints.md
+      - MuJoCo 后端: tutorial/physics/mujoco-backend.md
+      - 软体: tutorial/physics/soft-bodies.md
+      - 状态管理: tutorial/physics/state-management.md
+    - 机器人控制:
+      - 概览: tutorial/robot_control/index.md
+      - 动作空间: tutorial/robot_control/action-space.md
+      - 逆运动学: tutorial/robot_control/inverse-kinematics.md
+      - 关节控制: tutorial/robot_control/joint-control.md
+      - Mocap 控制: tutorial/robot_control/mocap-control.md
+      - 观测空间: tutorial/robot_control/observation-space.md
+    - 场景:
+      - 概览: tutorial/scene/index.md
+      - 角色操作: tutorial/scene/actor-manipulation.md
+      - 资源渲染: tutorial/scene/assets-rendering.md
+      - 场景加载: tutorial/scene/scene-loading.md
+      - 地形生成: tutorial/scene/terrain-generation.md
+    - 感知:
+      - 概览: tutorial/sensing/index.md
+      - 接触感知: tutorial/sensing/contact-sensing.md
+      - RGBD 相机: tutorial/sensing/rgbd-camera.md
+      - 传感器: tutorial/sensing/sensors.md
+    - 工具:
+      - 概览: tutorial/tools/index.md
+      - 资源处理: tutorial/tools/asset-processing.md
+      - HDF5 查看器: tutorial/tools/hdf5-viewer.md
+      - 输入设备: tutorial/tools/input-devices.md
+      - RLlib 适配器: tutorial/tools/rllib-adapter.md
+      - Robomimic 适配器: tutorial/tools/robomimic-adapter.md
+      - Robosuite 适配器: tutorial/tools/robosuite-adapter.md
+      - 地形工具: tutorial/tools/terrain-tools.md
+  - 常见问题:
+    - FAQ: faq/faq.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
