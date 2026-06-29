@@ -61,6 +61,16 @@ nav:
     - 传感器: api_reference/sensor.md
     - 工具函数: api_reference/utils.md
   - 教程:
+    - 🎓 新手入门:
+      - 新手概览: tutorial/beginners/index.md
+      - Hello World: tutorial/beginners/hello-world.md
+      - 场景搭建: tutorial/beginners/scene-setup.md
+      - 第一个环境: tutorial/beginners/your-first-env.md
+      - 读取状态: tutorial/beginners/state-queries.md
+      - 让机器人动起来: tutorial/beginners/move-a-joint.md
+      - 相机与视觉: tutorial/beginners/camera-and-vision.md
+      - 简单控制器: tutorial/beginners/simple-controller.md
+      - 搭建一个任务: tutorial/beginners/build-a-task.md
     - 物理仿真:
       - 概览: tutorial/physics/index.md
       - 接触与力: tutorial/physics/contacts-forces.md
