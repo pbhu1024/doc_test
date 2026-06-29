@@ -139,3 +139,53 @@
 .md-header--shadow {
   box-shadow: 0 0 0.4rem rgba(0,0,0,.1), 0 0.4rem 0.8rem rgba(0,0,0,.2) !important;
 }
+
+/* ============================================
+   侧边栏导航：大标题加粗加重，与小标题明显区分
+   ============================================ */
+
+/*
+ * 目标：教程目录中的 section header（如"🎓 新手入门"、"物理仿真"等）
+ * 这些是 .md-nav__item--nested 或 .md-nav__item--section 下的 .md-nav__link
+ * 需要让它们比子页面链接（小标题）更醒目
+ */
+
+/* 有子项的导航节点（即 section 大标题）—— 全局基础加粗 */
+.md-nav__item--nested > .md-nav__link,
+.md-nav__item--section > .md-nav__link {
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
+}
+
+/* 大标题文字容器也强制加粗 */
+.md-nav__item--nested > .md-nav__link .md-ellipsis,
+.md-nav__item--section > .md-nav__link .md-ellipsis {
+  font-weight: 800 !important;
+}
+
+/* ===== 暗色模式 ===== */
+[data-md-color-scheme="slate"] .md-nav__item--nested > .md-nav__link,
+[data-md-color-scheme="slate"] .md-nav__item--section > .md-nav__link {
+  color: #c4b5fd !important;
+  text-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
+}
+
+/* 大标题下方加微弱的底部分隔线，增强层次感 */
+[data-md-color-scheme="slate"] .md-nav__item--nested > .md-nav__link {
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  margin-bottom: 2px;
+  padding-bottom: 4px;
+}
+
+/* ===== 亮色模式 ===== */
+[data-md-color-scheme="default"] .md-nav__item--nested > .md-nav__link,
+[data-md-color-scheme="default"] .md-nav__item--section > .md-nav__link {
+  color: #4c1d95 !important;
+  font-weight: 800 !important;
+}
+
+[data-md-color-scheme="default"] .md-nav__item--nested > .md-nav__link {
+  border-bottom: 1px solid rgba(109, 40, 217, 0.2);
+  margin-bottom: 2px;
+  padding-bottom: 4px;
+}
