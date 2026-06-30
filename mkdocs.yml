@@ -125,5 +125,16 @@ markdown_extensions:
   - toc:
       permalink: true
 
+extra:
+  generator: false
+  copyright: Copyright &copy; 2024 OrcaGym 团队 |
+    <a href="https://github.com/pbhu1024/orcagym">GitHub</a> |
+    <a href="https://github.com/pbhu1024/orcagym/issues">反馈问题</a>
+
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pbhu1024/orcagym
+      name: OrcaGym on GitHub
+
 plugins:
   - search
