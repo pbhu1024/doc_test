@@ -115,27 +115,18 @@
 }
 
 /* ============================================
-   强制标题栏 & 标签栏始终可见
+   Header 常驻 + 标签栏随页面滚走
    ============================================ */
 
-/* 顶部标题栏吸顶 */
+/* 顶部标题栏始终可见 */
 .md-header {
   position: sticky !important;
   top: 0 !important;
 }
 
-/* 标签栏吸顶在标题栏下方, z-index 低于搜索容器 */
-.md-tabs {
-  position: sticky !important;
-  top: 2.4rem !important;
-  z-index: 2 !important;
-}
+/* 标签栏随页面内容自然滚走（不加 sticky） */
 
-/* 禁止 header 滚动隐藏动画干扰标签栏 */
-.md-header[data-md-state="hidden"] {
-  transform: none !important;
-}
-
+/* Header 阴影效果 */
 .md-header--shadow {
   box-shadow: 0 0 0.4rem rgba(0,0,0,.1), 0 0.4rem 0.8rem rgba(0,0,0,.2) !important;
 }
