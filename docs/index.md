@@ -10,7 +10,7 @@ OrcaGym 是由松应科技开发的开源具身仿真框架，提供与 OpenAI G
 
 OrcaGym 核心特性包括：
 
-- :material-gym: **Gymnasium 兼容** — 与现有 RL 算法无缝集成
+- :material-gymnastics: **Gymnasium 兼容** — 与现有 RL 算法无缝集成
 - :material-engine: **多物理后端** — 同时支持 MuJoCo/PhysX/ODE
 - :material-cloud: **分布式部署** — 通过 gRPC 实现混合本地/远程操作
 - :material-camera: **光线追踪渲染** — 逼真的视觉观察
