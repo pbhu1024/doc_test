@@ -126,7 +126,7 @@ markdown_extensions:
       permalink: true
 
 extra:
-  generator: false
+  generator: true
   copyright: Copyright &copy; 2024 OrcaGym 团队 |
     <a href="https://github.com/pbhu1024/orcagym">GitHub</a> |
     <a href="https://github.com/pbhu1024/orcagym/issues">反馈问题</a>
