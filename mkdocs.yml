@@ -130,16 +130,18 @@ markdown_extensions:
   - toc:
       permalink: true
 
-# extra:
-#   generator: true
-#   copyright: Copyright &copy; 2024 OrcaGym 团队 |
-#     <a href="https://github.com/pbhu1024/orcagym">GitHub</a> |
-#     <a href="https://github.com/pbhu1024/orcagym/issues">反馈问题</a>
+copyright: Copyright &copy; 松应科技有限公司 
+  # <a href="https://github.com/pbhu1024/orcagym/issues">反馈问题</a>
 
-#   social:
-#     - icon: fontawesome/brands/github
-#       link: https://github.com/pbhu1024/orcagym
-#       name: OrcaGym on GitHub
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/openverse-orca/OrcaGym
+      name: OrcaGym on GitHub
+    - icon: fontawesome/brands/weixin
+      link: https://www.orca3d.cn/
+      name: 松应科技有限公司
 
 plugins:
   - search
