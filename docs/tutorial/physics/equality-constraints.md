@@ -85,7 +85,7 @@ env.gym.modify_equality_objects(
 
 ```python
 # 通过约束列表批量更新
-env.update_anchor_equality_constraints(eq_list)
+env.update_equality_constraints(eq_list)
 ```
 
 ## 完整操作流程

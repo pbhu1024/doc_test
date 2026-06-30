@@ -9,7 +9,7 @@ OrcaGym 提供全面的接触和力查询接口，用于奖励计算、调试和
 ```python
 # 获取所有当前接触对
 contacts = env.query_contact_simple()
-# → [{"ID": 0, "Geom1": 12, "Geom2": 34, "Body1": 3, "Body2": 7}, ...]
+# → [{"ID": 0, "Dim": 3, "Geom1": 12, "Geom2": 34}, ...]
 
 print(f"当前有 {len(contacts)} 个接触对")
 ```
@@ -46,7 +46,7 @@ def analyze_contacts(env):
         f = forces[fid]
         f_linear = f[:3]
         f_magnitude = np.linalg.norm(f_linear)
-        print(f"  接触 {fid}: body{c['Body1']} ↔ body{c['Body2']}, "
+        print(f"  接触 {fid}: geom{c['Geom1']} ↔ geom{c['Geom2']}, "
               f"力={f_magnitude:.2f}N, 方向={f_linear}")
 
 # 在仿真循环中使用
@@ -125,8 +125,10 @@ def detect_collision(env, body_a_name, body_b_name):
     body_b_id = env.model.body_name2id(body_b_name)
     
     for c in contacts:
-        if (c["Body1"] == body_a_id and c["Body2"] == body_b_id) or \
-           (c["Body1"] == body_b_id and c["Body2"] == body_a_id):
+        geom1_body = env.model.get_geom_body_id(c["Geom1"])
+        geom2_body = env.model.get_geom_body_id(c["Geom2"])
+        if (geom1_body == body_a_id and geom2_body == body_b_id) or \
+           (geom1_body == body_b_id and geom2_body == body_a_id):
             return True
     return False
 ```

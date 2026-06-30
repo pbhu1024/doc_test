@@ -21,7 +21,8 @@ contacts = env.query_contact_simple()
 target_body_id = env.model.body_name2id("robot_finger")
 finger_contacts = [
     c for c in contacts 
-    if c["Body1"] == target_body_id or c["Body2"] == target_body_id
+    if env.model.get_geom_body_id(c["Geom1"]) == target_body_id 
+    or env.model.get_geom_body_id(c["Geom2"]) == target_body_id
 ]
 
 # 3. 获取接触力
@@ -40,7 +41,9 @@ def is_grasped(env, finger_names: list[str], object_name: str) -> bool:
     finger_ids = [env.model.body_name2id(f) for f in finger_names]
     
     for c in contacts:
-        bodies = {c["Body1"], c["Body2"]}
+        geom1_body = env.model.get_geom_body_id(c["Geom1"])
+        geom2_body = env.model.get_geom_body_id(c["Geom2"])
+        bodies = {geom1_body, geom2_body}
         if object_id in bodies and any(f in bodies for f in finger_ids):
             return True
     return False
@@ -94,7 +97,7 @@ def contact_summary(env) -> dict:
             
             summary["total_force"] += magnitude
             summary["max_force"] = max(summary["max_force"], magnitude)
-            summary["body_pairs"].add((c["Body1"], c["Body2"]))
+            summary["body_pairs"].add((env.model.get_geom_body_id(c["Geom1"]), env.model.get_geom_body_id(c["Geom2"])))
     
     return summary
 ```

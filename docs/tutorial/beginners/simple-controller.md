@@ -246,7 +246,7 @@ class PositionControlEnv(OrcaGymLocalEnv):
         ranges = []
         for i in range(self.nu):
             joint_name = self.model.joint_id2name(i)
-            info = self.model.get_joint(joint_name)
+            info = self.model.get_joint_byname(joint_name)
             if info.get("Limited", False):
                 ranges.append(info["Range"])
             else:

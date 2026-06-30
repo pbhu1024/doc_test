@@ -27,7 +27,7 @@ def check_joints(env):
     """查询所有关节的位置和速度"""
 
     # 获取所有关节的名字列表
-    joint_names = env.model.get_joint_names()
+    joint_names = list(env.model.get_joint_dict().keys())
     print(f"共有 {len(joint_names)} 个关节")
 
     # 按名称查询位置
@@ -53,11 +53,11 @@ def check_joints(env):
 ```python
 def inspect_joint(env, joint_name: str):
     """查看单个关节的详细信息"""
-    info = env.model.get_joint(joint_name)
+    info = env.model.get_joint_byname(joint_name)
     # info 是一个字典，包含该关节的所有属性
     print(f"关节: {joint_name}")
     print(f"  类型: {info['Type']}")        # hinge(旋转) / slide(滑动) / free(自由) / ball(球)
-    print(f"  维度: nq={info['JointNq']}, nv={info['JointNv']}")
+    print(f"  维度: qpos_size={get_qpos_size(info['Type'])}, dof_size={get_dof_size(info['Type'])}")
     print(f"  有限位: {info['Limited']}")    # 是否有关节限位
     if info['Limited']:
         print(f"  范围: [{info['Range'][0]:.3f}, {info['Range'][1]:.3f}] 弧度")
@@ -225,7 +225,7 @@ class StateDumper:
         print(f"仿真时间: {env.data.time:.3f}s  (步数: {int(env.data.time/env.dt)})")
 
         # 关节
-        joint_names = env.model.get_joint_names()[:5]  # 只看前 5 个
+        joint_names = list(env.model.get_joint_dict().keys())[:5]  # 只看前 5 个
         qpos = env.query_joint_qpos(joint_names)
         print("\n关节位置:")
         for name in joint_names:

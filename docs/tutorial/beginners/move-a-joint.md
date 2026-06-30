@@ -222,10 +222,13 @@ def draw_circle_manual(env, steps: int = 300):
 ```python
 def print_qpos_layout(env):
     """打印 qpos 数组中每个关节的位置"""
+    from orca_gym.core.orca_gym_local import get_qpos_size
+    
     offset = 0
     for i in range(env.model.njnt):  # njnt = 关节总数
         name = env.model.joint_id2name(i)
-        nq = env.model.get_joint(name)["JointNq"]  # 这个关节占几个 qpos 元素
+        joint_type = env.gym._mjModel.jnt_type[i]
+        nq = get_qpos_size(joint_type)  # 这个关节占几个 qpos 元素
         print(f"qpos[{offset:2d}:{offset+nq:2d}]  {name}  (nq={nq})")
         offset += nq
 ```

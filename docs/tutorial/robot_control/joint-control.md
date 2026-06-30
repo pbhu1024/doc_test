@@ -51,17 +51,26 @@ env.update_data()
 ```python
 from orca_gym.utils.joint_controller import JointController
 
-# 创建一个 PD 控制器
-controller = JointController(
-    env=env,
-    joint_names=["shoulder", "elbow", "wrist"],
-    kp=100.0,   # 比例增益
-    kd=10.0,    # 微分增益
-)
+# 为每个关节创建一个 PD 控制器
+# JointController 是单关节控制器，需要为每个关节分别创建
+controllers = {
+    "shoulder": JointController(Kp=100.0, Ki=0.1, Kd=10.0, Kv=5.0, max_speed=80.0, ctrlrange=(-80, 80)),
+    "elbow":    JointController(Kp=100.0, Ki=0.1, Kd=10.0, Kv=5.0, max_speed=80.0, ctrlrange=(-80, 80)),
+    "wrist":    JointController(Kp=100.0, Ki=0.1, Kd=10.0, Kv=5.0, max_speed=80.0, ctrlrange=(-80, 80)),
+}
 
-# 计算控制力矩
-target_positions = {"shoulder": 0.5, "elbow": -0.3, "wrist": 1.2}
-ctrl = controller.compute(target_positions)
+# 计算控制力矩（每个关节独立计算）
+ctrl = np.zeros(env.model.nu)
+target_angles = {"shoulder": 0.5, "elbow": -0.3, "wrist": 1.2}
+for joint_name, target in target_angles.items():
+    joint_id = env.model.joint_name2id(joint_name)
+    dof_adr = env.jnt_dofadr(joint_name)
+    ctrl[joint_id] = controllers[joint_name].compute_torque(
+        target_qpos=target,
+        current_qpos=env.data.qpos[dof_adr],
+        current_qvel=env.data.qvel[dof_adr],
+        dt=env.dt,
+    )
 
 # 应用
 env.do_simulation(ctrl, env.frame_skip)
@@ -84,8 +93,8 @@ env.do_simulation(ctrl, env.frame_skip)
 ```python
 from orca_gym.utils.low_pass_filter import LowPassFilter
 
-# 创建滤波器
-filter = LowPassFilter(alpha=0.1, shape=(env.model.nu,))
+# 创建滤波器（initial_output 需要与输入维度匹配）
+filter = LowPassFilter(alpha=0.1, initial_output=np.zeros(env.model.nu))
 
 # 在每步对 ctrl 滤波
 raw_ctrl = compute_raw_ctrl(...)
@@ -98,8 +107,8 @@ env.do_simulation(smooth_ctrl, env.frame_skip)
 ```python
 def check_joint_limits(env):
     """检查所有关节是否在限位内"""
-    for joint_name in env.model.get_joint_names():
-        joint_info = env.model.get_joint(joint_name)
+    for joint_name in list(env.model.get_joint_dict().keys()):
+        joint_info = env.model.get_joint_byname(joint_name)
         if not joint_info["Limited"]:
             continue
         
