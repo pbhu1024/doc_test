@@ -5,6 +5,10 @@ repo_url: https://github.com/pbhu1024/doc_test
 
 theme:
   name: material
+  icon:
+    logo: material/robot-outline
+    repo: fontawesome/brands/github
+
   palette:
     # 暗色模式 - 赛博朋克风
     - scheme: slate
@@ -29,7 +33,9 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
+    - navigation.indexes
     - navigation.top
+    - navigation.footer
     - search.highlight
     - search.suggest
     - search.share
@@ -125,16 +131,19 @@ markdown_extensions:
   - toc:
       permalink: true
 
-# extra:
-#   generator: true
-#   copyright: Copyright &copy; 2024 OrcaGym 团队 |
-#     <a href="https://github.com/pbhu1024/orcagym">GitHub</a> |
-#     <a href="https://github.com/pbhu1024/orcagym/issues">反馈问题</a>
+extra:
+  generator: true
+  copyright: Copyright &copy; 2024 OrcaGym 团队 |
+    <a href="https://github.com/pbhu1024/orcagym">GitHub</a> |
+    <a href="https://github.com/pbhu1024/orcagym/issues">反馈问题</a>
 
-#   social:
-#     - icon: fontawesome/brands/github
-#       link: https://github.com/pbhu1024/orcagym
-#       name: OrcaGym on GitHub
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pbhu1024/orcagym
+      name: OrcaGym on GitHub
 
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: datetime

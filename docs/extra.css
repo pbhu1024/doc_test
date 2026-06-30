@@ -189,3 +189,66 @@
   margin-bottom: 2px;
   padding-bottom: 4px;
 }
+
+/* ============================================
+   Footer 底部栏样式
+   ============================================ */
+
+/* ---------- 版权区域与社交图标对齐 ---------- */
+.md-footer-meta__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* 社交图标 hover 效果 */
+.md-footer-social__link:hover {
+  opacity: 0.85;
+  transform: scale(1.1);
+  transition: transform 0.15s ease;
+}
+
+/* ---------- 底部导航 (上一页/下一页) ---------- */
+.md-footer-nav__direction {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* 暗色模式下 footer 导航微调 */
+[data-md-color-scheme="slate"] .md-footer {
+  background-color: #0c1021;
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+[data-md-color-scheme="slate"] .md-footer-meta {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- 底部导航 hover 颜色 ---------- */
+[data-md-color-scheme="slate"] .md-footer-nav__link:hover {
+  color: #a78bfa;
+}
+
+/* ---------- Git 最后更新日期样式 ---------- */
+.md-source-date {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+/* ============================================
+   Header Logo 样式微调
+   ============================================ */
+
+/* logo 图标与站点名称对齐 */
+.md-header__button.md-logo {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  padding: 0.2rem;
+}
+
+.md-header__button.md-logo svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
