@@ -2,23 +2,13 @@
 
 欢迎来到 **OrcaGym** 文档！
 
-OrcaGym 是由松应科技开发的开源机器人仿真平台，提供与 OpenAI Gym/Gymnasium 完全兼容的接口，同时支持多物理后端（MuJoCo、PhysX、ODE）和分布式仿真。
-
----
-
-## 文档导航
-
-| 章节 | 说明 |
-|------|------|
-| [🐋 什么是 OrcaGym](getting-started/what-is-orcagym.md) | OrcaGym 是什么，核心功能一览 |
-| [🧬 为什么选择 OrcaGym](getting-started/why-orcagym.md) | 与其他仿真平台的对比与优势 |
-| [🛠️ 安装指南](getting-started/installation.md) | 从 PyPI 或源码安装 |
+OrcaGym 是由松应科技开发的开源具身仿真框架，提供与 OpenAI Gym/Gymnasium 完全兼容的接口，同时OrcaLab以及OrcaStudio。
 
 ---
 
 ## 快速了解
 
-OrcaGym 是一个 **云原生机器人仿真平台**，核心特性包括：
+OrcaGym 核心特性包括：
 
 - :material-gym: **Gymnasium 兼容** — 与现有 RL 算法无缝集成
 - :material-engine: **多物理后端** — 同时支持 MuJoCo/PhysX/ODE
