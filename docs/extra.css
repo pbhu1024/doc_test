@@ -243,3 +243,9 @@
   width: 1.4rem;
   height: 1.4rem;
 }
+/* ============================================
+   隐藏 GitHub 仓库的 fork/star 统计数字
+   ============================================ */
+.md-source__facts {
+  display: none !important;
+}
