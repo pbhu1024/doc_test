@@ -11,7 +11,7 @@ OrcaGym 提供了丰富的查询接口，按查询对象分类：
 | 关节 | `query_joint_qpos(names)` | 关节角度 |
 | 关节 | `query_joint_qvel(names)` | 关节速度 |
 | Body | `get_body_xpos_xmat_xquat(names)` | body 的位置 + 旋转矩阵 + 四元数 |
-| Body | `env.data.body_xpos(name)` | body 世界位置（Euler 体系，按名称） |
+| Body | `env.data.body_xpos(name)` | body 世界位置（按名称） |
 | Site | `query_site_pos_and_quat(names)` | site 的位置 + 四元数 |
 | Site | `query_site_xvalp_xvalr(names)` | site 的线速度 + 角速度 |
 | 传感器 | `query_sensor_data(names)` | 各类传感器的读数 |
@@ -75,7 +75,7 @@ def check_body_pose(env):
     for name in list(body_names)[:10]:
         print(f"  - {name}")
 
-    # Euler 体系：按名称逐个查询（推荐）
+    # 按名称逐个查询（推荐）
     for name in ["robot_0_base_link", "robot_0_ee_link"]:
         pos = env.data.body_xpos(name)       # (3,) 世界坐标
         quat = env.data.body_xquat(name)     # (4,) [w,x,y,z]
@@ -236,13 +236,10 @@ for i in range(100):
 ## 状态更新的时机
 
 ```
-mj_forward() 或 mj_step()
+mj_forward() 或 do_simulation()
         │
         ▼
   所有派生量更新（传感器、接触力、body位姿...）
-        │
-        ▼
-  sync_to_view()  ← 同步到 self.data（Euler 体系零拷贝）
         │
         ▼
   你的查询方法 ← 现在可以读到最新值
@@ -250,8 +247,8 @@ mj_forward() 或 mj_step()
 
 !!! warning "查询前必须先 forward/step"
     ```python
-    # ✅ 正确 — Euler 体系
-    env.do_simulation(ctrl, frame_skip)  # 内部做了 step + sync_to_view
+    # ✅ 正确
+    env.do_simulation(ctrl, frame_skip)  # 内部做了 step + 自动同步
     pos = env.query_joint_qpos(["joint_0"])
 
     # ❌ 错误——读到的可能是旧数据

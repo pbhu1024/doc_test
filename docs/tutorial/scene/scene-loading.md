@@ -16,7 +16,7 @@
 ## OrcaGymScene 工具
 
 ```python
-from orca_gym.scene import OrcaGymScene
+from orca_scene import OrcaGymScene
 
 # 连接场景
 scene = OrcaGymScene("localhost:50051")
@@ -26,11 +26,11 @@ scene.get_rundata(script_name="my_script", stage="beginscene")
 
 # 显示 UI 文本
 scene.set_ui_text(
-    actor_name=1,
-    message="仿真开始！",
-    showtime=5,
-    color="0xff0000",
-    size=32,
+ actor_name=1,
+ message="仿真开始！",
+ showtime=5,
+ color="0xff0000",
+ size=32,
 )
 
 scene.close()
@@ -39,7 +39,7 @@ scene.close()
 ## OrcaGymSceneRuntime
 
 ```python
-from orca_gym.scene import OrcaGymSceneRuntime
+from orca_scene import OrcaGymSceneRuntime
 
 # 在环境中注入场景运行时
 scene_runtime = OrcaGymSceneRuntime(...)

@@ -4,7 +4,7 @@ OrcaGym 是一个**开源、云原生的机器人仿真平台**，提供与 Open
 
 ## 一句话概括
 
-**OrcaGym = Gymnasium API + MuJoCo 物理引擎 + gRPC 分布式通信 + OrcaStudio/OrcaLab 云平台**
+**OrcaGym = Gymnasium API + MuJoCo 物理引擎 + 分布式通信 + OrcaStudio/OrcaLab 云平台**
 
 ## 核心定位
 
@@ -12,7 +12,7 @@ OrcaGym 是一个**开源、云原生的机器人仿真平台**，提供与 Open
 
 1. **标准化接口**：完全兼容 Gymnasium API，零成本迁移现有 RL 算法
 2. **多物理后端**：通过 OrcaStudio/OrcaLab 集成 MuJoCo、PhysX、ODE
-3. **云原生架构**：gRPC 通信实现本地/远程混合部署
+3. **云原生架构**：实现本地/远程混合部署
 4. **逼真渲染**：光线追踪为视觉 RL 任务提供高质量观察
 
 ## 主要特性
@@ -40,44 +40,21 @@ obs, reward, terminated, truncated, info = env.step(action)
 
 ### 🌐 分布式部署
 
-```
-本地 Python 代码 ──(gRPC)──▶ OrcaStudio/OrcaLab 服务器
-                              ├── 物理仿真 (MuJoCo/PhysX)
-                              ├── 场景管理
-                              └── 渲染引擎
-```
+支持从本地开发到大规模远程训练的灵活部署：
+- **本地模式**：Python 进程内直接运行 MuJoCo，适合开发调试
+- **远程模式**：连接远程服务器进行物理计算和渲染，适合大规模训练
 
 ### 📷 传感器与感知
 
 - IMU（加速度计、陀螺仪）
 - 力/扭矩传感器
-- RGB-D 相机（WebSocket 流式传输）
+- RGB-D 相机
 - 接触力传感器
 
 ### 🤖 多智能体支持
 
 原生支持同构/异构多智能体场景，智能体间可独立或协作。
 
-## 版本历史
-
-| 版本 | 日期 | 主要变更 |
-|------|------|----------|
-| 25.11.1 | 2025-11-06 | PyPI 发布准备，包名改为 `orca-gym` |
-| 25.10.x | 2025-10 | 功能完整性打磨 |
-| 早期版本 | 2024 | 核心架构搭建 |
-
 ## 许可证
 
 MIT License — 完全开源，可自由用于学术和商业用途。
-
-## 引用
-
-```bibtex
-@software{OrcaGym2024,
-  author = {松应科技},
-  title = {OrcaGym: 云原生机器人仿真平台},
-  year = {2024},
-  publisher = {GitHub},
-  howpublished = {\url{https://github.com/openverse-orca/OrcaGym}}
-}
-```

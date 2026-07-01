@@ -45,10 +45,8 @@ brew install glfw glew
 env.set_joint_qpos(...)
 env.mj_forward()   # ← 这步必须执行
 
-# Euler 体系 — 同步到 DataView
-env._gym.sync_to_view()
-# Local 体系（老）— 同步到 data
-env.gym.update_data()
+# 同步到 DataView
+env._sync_view()
 
 # 现在再读数据就是正常的
 print(env.data.qpos)
@@ -56,15 +54,7 @@ print(env.data.qpos)
 
 ### Q: 步进后读到的是旧数据？
 
-```python
-# ✅ Euler 体系 — do_simulation 已自动同步
-env.do_simulation(ctrl, n_frames)
-data = env.data.qpos     # 零拷贝视图，已是最新
-
-# ✅ Local 体系（老）— 需手动 update_data
-env.do_simulation(ctrl, n_frames)
-data = env.data.qpos.copy()
-```
+`do_simulation()` 内部已自动同步数据，返回后 `env.data` 就是最新状态。如果手动操作了状态，记得调用 `mj_forward()` 和 `_sync_view()`。
 
 ### Q: 如何提高仿真速度？
 
@@ -87,7 +77,7 @@ data = env.data.qpos.copy()
 
 ### Q: 如何自定义环境？
 
-推荐继承 `OrcaGymEulerEnv`（新主路径），实现 `step()`、`reset_model()`、`_get_obs()` 方法。
+继承 `OrcaGymEulerEnv`，实现 `step()`、`reset_model()`、`_get_obs()` 方法即可。
 
 ```python
 from orca_gym.environment.euler.orca_gym_euler_env import OrcaGymEulerEnv
@@ -98,11 +88,9 @@ class MyEnv(OrcaGymEulerEnv):
     def _get_obs(self): ...
 ```
 
-备选：继承 `OrcaGymLocalEnv`（老路径，维护模式）。
-
 ### Q: action_space 的维度怎么来的？
 
-来自 MuJoCo 模型中的执行器数量 (`model.nu`)：
+来自模型中的执行器数量 (`model.nu`)：
 
 ```python
 print(f"执行器数: {env.model.nu}")
@@ -116,10 +104,10 @@ print(f"动作空间: {env.action_space}")
 def _get_obs(self):
     # 关节状态
     proprio = np.concatenate([self.data.qpos.copy(), self.data.qvel.copy()])
-    
+
     # 传感器数据
     sensors = self.query_sensor_data(["imu_acc", "imu_gyro"])
-    
+
     return np.concatenate([
         proprio,
         sensors["imu_acc"],
@@ -141,43 +129,17 @@ def _get_obs(self):
 
 ### Q: 从原生 MuJoCo 环境迁移？
 
-推荐使用 `OrcaGymEulerEnv`（新主路径）：
 1. 将基类改为 `OrcaGymEulerEnv`
-2. 使用 `env.data`（`OrcaGymDataView`）代替直接访问 `_mjData`
-3. 使用 `env.sim_config` 代替 `_mjModel.opt.*`
-4. 使用 `env.apply_body_force()` 代替直接写 `xfrc_applied`
-
-备选：使用 `OrcaGymLocalEnv`（老路径），保持 `env.gym._mjModel` / `env.gym._mjData` 访问方式。
-
-### Q: Euler 体系和 Local 体系有什么区别？
-
-| 维度 | Euler（推荐） | Local（老） |
-|------|-------------|-----------|
-| `env.gym` | ❌ 不存在 | ✅ 公共属性 |
-| 状态类型 | `OrcaGymDataView` | `OrcaGymData` |
-| 配置方式 | `env.sim_config` | `env.gym.opt` |
-| 外力注入 | `env.apply_body_force()` | 直接写 `xfrc_applied` |
-| 数据同步 | `do_simulation()` 自动 | 手动 `update_data()` |
+2. 使用 `env.data` 代替直接访问 MuJoCo 内部数据
+3. 使用 `env.sim_config` 代替直接访问求解器参数
+4. 使用 `env.apply_body_force()` 代替直接写外力
 
 ## 其他
-
-### Q: OrcaGym 和 OrcaManipulation 的关系？
-
-- **OrcaGym** = 核心仿真接口库 (本仓库)
-- **OrcaManipulation** = 遥操作、数据采集、应用示例
-
-```bash
-# 核心库
-pip install orca-gym
-
-# 示例和遥操作
-git clone https://github.com/openverse-orca/OrcaManipulation.git
-```
 
 ### Q: 如何贡献代码？
 
 参见 [贡献指南](https://github.com/openverse-orca/OrcaGym#贡献)。
 
-### Q: 联系作者？
+### Q: 如何获取帮助？
 
-邮箱：huangwei@orca3d.cn
+请通过 [GitHub Issues](https://github.com/openverse-orca/OrcaGym/issues) 提交问题。

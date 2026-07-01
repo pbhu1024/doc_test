@@ -17,7 +17,7 @@
 
 ```python
 """
-hello_orcagym.py — OrcaGym Euler 体系最简示例
+hello_orcagym.py — OrcaGym 最简示例
 
 功能：创建环境 → 随机动作驱动 200 步 → 关闭
 前提：不需要 OrcaStudio（离线模式，skip_grpc_load=True）
@@ -28,83 +28,83 @@ from orca_gym.environment.euler.orca_gym_euler_env import OrcaGymEulerEnv
 
 
 class HelloEnv(OrcaGymEulerEnv):
-    """最简环境：用随机动作驱动仿真，打印状态。"""
+ """最简环境：用随机动作驱动仿真，打印状态。"""
 
-    def __init__(self, model_xml_path, **kwargs):
-        super().__init__(
-            frame_skip=kwargs.pop("frame_skip", 5),
-            orcagym_addr=kwargs.pop("orcagym_addr", "localhost:50051"),
-            agent_names=kwargs.pop("agent_names", ["agent0"]),
-            time_step=kwargs.pop("time_step", 0.002),
-            model_xml_path=model_xml_path,
-            skip_grpc_load=True,  # 离线模式，不需要 Studio
-            **kwargs,
-        )
-        # 动作空间 = Box
-        self.action_space = spaces.Box(
-            low=-1.0, high=1.0, shape=(self.model.nu,), dtype=np.float32
-        )
-        obs = self._get_obs()
-        self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf, shape=obs.shape, dtype=np.float32
-        )
+ def __init__(self, model_xml_path, **kwargs):
+ super().__init__(
+ frame_skip=kwargs.pop("frame_skip", 5),
+ orcagym_addr=kwargs.pop("orcagym_addr", "localhost:50051"),
+ agent_names=kwargs.pop("agent_names", ["agent0"]),
+ time_step=kwargs.pop("time_step", 0.002),
+ model_xml_path=model_xml_path,
+ skip_grpc_load=True, # 离线模式，不需要 Studio
+ **kwargs,
+ )
+ # 动作空间 = Box
+ self.action_space = spaces.Box(
+ low=-1.0, high=1.0, shape=(self.model.nu,), dtype=np.float32
+ )
+ obs = self._get_obs()
+ self.observation_space = spaces.Box(
+ low=-np.inf, high=np.inf, shape=obs.shape, dtype=np.float32
+ )
 
-    def step(self, action):
-        action = np.asarray(action, dtype=np.float32).reshape(self.model.nu)
-        self.do_simulation(action, self.frame_skip)
-        obs = self._get_obs()
-        reward = 0.0
-        terminated = False
-        truncated = False
-        info = {"time": float(self.data.time)}
-        return obs, reward, terminated, truncated, info
+ def step(self, action):
+ action = np.asarray(action, dtype=np.float32).reshape(self.model.nu)
+ self.do_simulation(action, self.frame_skip)
+ obs = self._get_obs()
+ reward = 0.0
+ terminated = False
+ truncated = False
+ info = {"time": float(self.data.time)}
+ return obs, reward, terminated, truncated, info
 
-    def reset_model(self):
-        self.set_joint_qpos(self.init_qpos)
-        self.set_joint_qvel(self.init_qvel)
-        self.mj_forward()
-        self._sync_view()
-        return self._get_obs(), {}
+ def reset_model(self):
+ self.set_joint_qpos(self.init_qpos)
+ self.set_joint_qvel(self.init_qvel)
+ self.mj_forward()
+ self._sync_view()
+ return self._get_obs(), {}
 
-    def _get_obs(self) -> np.ndarray:
-        return self.data.qpos.copy().astype(np.float32)
+ def _get_obs(self) -> np.ndarray:
+ return self.data.qpos.copy().astype(np.float32)
 
 
 # ============================================================
 # 使用
 # ============================================================
 if __name__ == "__main__":
-    # 场景 XML 路径（请替换为你本地的场景文件）
-    SCENE_XML = "/path/to/your/scene.xml"
+ # 场景 XML 路径（请替换为你本地的场景文件）
+ SCENE_XML = "/path/to/your/scene.xml"
 
-    print("=" * 60)
-    print("Hello OrcaGym — 离线模式最简示例")
-    print("=" * 60)
+ print("=" * 60)
+ print("Hello OrcaGym — 离线模式最简示例")
+ print("=" * 60)
 
-    # 1. 创建环境（离线模式，直接加载本地 XML）
-    env = HelloEnv(model_xml_path=SCENE_XML, frame_skip=5, time_step=0.002)
-    print(f"[1/4] 环境创建成功: nq={env.model.nq}, nv={env.model.nv}, nu={env.model.nu}")
+ # 1. 创建环境（离线模式，直接加载本地 XML）
+ env = HelloEnv(model_xml_path=SCENE_XML, frame_skip=5, time_step=0.002)
+ print(f"[1/4] 环境创建成功: nq={env.model.nq}, nv={env.model.nv}, nu={env.model.nu}")
 
-    # 2. 验证状态访问
-    print(f"[2/4] 状态访问: qpos.shape={env.data.qpos.shape}, time={env.data.time:.4f}")
+ # 2. 验证状态访问
+ print(f"[2/4] 状态访问: qpos.shape={env.data.qpos.shape}, time={env.data.time:.4f}")
 
-    # 3. reset
-    obs, info = env.reset()
-    print(f"[3/4] reset 成功: obs.shape={obs.shape}")
+ # 3. reset
+ obs, info = env.reset()
+ print(f"[3/4] reset 成功: obs.shape={obs.shape}")
 
-    # 4. 步进循环（随机动作，200 步）
-    total_reward = 0.0
-    for step in range(200):
-        action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
-        total_reward += reward
-        if (step + 1) % 50 == 0:
-            print(f"[4/4] step {step + 1}/200: obs={obs}, reward={reward:.4f}")
+ # 4. 步进循环（随机动作，200 步）
+ total_reward = 0.0
+ for step in range(200):
+ action = env.action_space.sample()
+ obs, reward, terminated, truncated, info = env.step(action)
+ total_reward += reward
+ if (step + 1) % 50 == 0:
+ print(f"[4/4] step {step + 1}/200: obs={obs}, reward={reward:.4f}")
 
-    print(f"[4/4] 步进完成: 总奖励={total_reward:.4f}")
-    env.close()
-    print("=" * 60)
-    print("Hello OrcaGym 完成！")
+ print(f"[4/4] 步进完成: 总奖励={total_reward:.4f}")
+ env.close()
+ print("=" * 60)
+ print("Hello OrcaGym 完成！")
 ```
 
 运行：
@@ -121,15 +121,15 @@ python hello_orcagym.py
 
 ```python
 class HelloEnv(OrcaGymEulerEnv):
-    def __init__(self, model_xml_path, **kwargs):
-        super().__init__(
-            frame_skip=5,                    # 每次 step() 推 5 个物理步
-            orcagym_addr="localhost:50051",   # gRPC 地址（离线模式不需要）
-            agent_names=["agent0"],           # agent 名称列表
-            time_step=0.002,                  # 每个物理步 0.002 秒
-            model_xml_path=model_xml_path,    # 本地 MuJoCo XML 场景路径
-            skip_grpc_load=True,              # True = 离线模式
-        )
+ def __init__(self, model_xml_path, **kwargs):
+ super().__init__(
+ frame_skip=5, # 每次 step() 推 5 个物理步
+ orcagym_addr="localhost:50051", # gRPC 地址（离线模式不需要）
+ agent_names=["agent0"], # agent 名称列表
+ time_step=0.002, # 每个物理步 0.002 秒
+ model_xml_path=model_xml_path, # 本地 MuJoCo XML 场景路径
+ skip_grpc_load=True, # True = 离线模式
+ )
 ```
 
 关键参数：
@@ -141,16 +141,16 @@ class HelloEnv(OrcaGymEulerEnv):
 ### 需要实现的三个抽象方法
 
 ```python
-def step(self, action):        # 执行一步仿真 → 返回 (obs, reward, terminated, truncated, info)
-def reset_model(self):        # 重置到初始状态 → 返回 (obs, info)
-def _get_obs(self) -> dict | np.ndarray:  # 收集观测数据
+def step(self, action): # 执行一步仿真 → 返回 (obs, reward, terminated, truncated, info)
+def reset_model(self): # 重置到初始状态 → 返回 (obs, info)
+def _get_obs(self) -> dict | np.ndarray: # 收集观测数据
 ```
 
 ### 核心循环
 
 ```python
-obs, info = env.reset()                              # 回到初始状态
-obs, reward, terminated, truncated, info = env.step(action)  # 前进一步
+obs, info = env.reset() # 回到初始状态
+obs, reward, terminated, truncated, info = env.step(action) # 前进一步
 ```
 
 | 变量 | 含义 | 类型 |

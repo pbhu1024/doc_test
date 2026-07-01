@@ -66,7 +66,7 @@ def torque_drive_joint(env, joint_index: int = 0, steps: int = 200):
 
 ## 方法 2：直接设置关节位置（适合 reset）
 
-直接修改 qpos，然后 `mj_forward()`：
+使用 `set_joint_qpos` 修改关节位置，然后 `mj_forward()`：
 
 ```python
 def wiggle_joint(env, joint_index: int = 0, amplitude: float = 0.5, steps: int = 200):
@@ -86,14 +86,19 @@ def wiggle_joint(env, joint_index: int = 0, amplitude: float = 0.5, steps: int =
         # 1. 用正弦波计算目标角度
         target_angle = amplitude * np.sin(i * 0.1)
 
-        # 2. 设置 qpos 和清零速度
-        env.data.qpos[joint_index] = target_angle
-        env.data.qvel[joint_index] = 0.0
+        # 2. 构造新的 qpos 数组
+        new_qpos = env.data.qpos.copy()
+        new_qpos[joint_index] = target_angle
 
-        # 3. mj_forward() 更新所有派生量（body位姿、传感器等）
+        # 3. 设置 qpos 并清零速度
+        env.set_joint_qpos(new_qpos)
+        env.set_joint_qvel(np.zeros(env.model.nv))
+
+        # 4. mj_forward() 更新所有派生量（body位姿、传感器等）
         env.mj_forward()
+        env._sync_view()
 
-        # 4. 渲染
+        # 5. 渲染
         env.render()
         time.sleep(0.02)
 
@@ -105,7 +110,7 @@ def wiggle_joint(env, joint_index: int = 0, amplitude: float = 0.5, steps: int =
 ```
 
 !!! warning "这个方法不经过物理！"
-    `env.data.qpos[joint_index] = target_angle` 是**瞬间设置**位置——不经过力矩、不经过接触力、不考虑质量/惯性。关节会"瞬移"到目标角度。
+    `set_joint_qpos()` 是**直接设置**位置——不经过力矩、不经过接触力、不考虑质量/惯性。
     
     这在**重置环境**时很有用（快速设定初始姿态），但在正常仿真中应该用**力矩控制**。
 
@@ -120,14 +125,18 @@ def set_named_joint(env, joint_name: str, target_angle: float):
     """
     按名称设置单个关节的位置。
     """
-    # 设置（Euler 体系：全量设置）
-    env.set_joint_qpos({
-        joint_name: np.array([target_angle]),
-    })
+    # 构造新的 qpos（需要在全局 qpos 中修改正确的索引）
+    qpos = env.data.qpos.copy()
+    qpos_addr = env.jnt_qposadr(joint_name)
+    joint_type = env.model.get_joint_byname(joint_name)["Type"]
 
-    # 必须 forward！
+    # 根据关节类型设置值
+    if joint_type == 3:  # HINGE
+        qpos[qpos_addr] = target_angle
+
+    env.set_joint_qpos(qpos)
     env.mj_forward()
-    env._gym.sync_to_view()   # Euler: 同步 DataView
+    env._sync_view()
 
     # 验证
     actual = env.query_joint_qpos([joint_name])[joint_name]
@@ -136,44 +145,6 @@ def set_named_joint(env, joint_name: str, target_angle: float):
 
 # 用法
 set_named_joint(env, "robot_0_joint1", 0.5)
-```
-
-同样，也可以设置速度：
-
-```python
-env.set_joint_qvel({
-    "robot_0_joint1": np.array([0.1]),  # 0.1 弧度/秒
-})
-env.mj_forward()
-```
-
----
-
-## 完整示例：让机械臂画圆
-
-```python
-def draw_circle_manual(env, steps: int = 300):
-    """手动设置关节位置，让末端大致画一个圆圈"""
-
-    print("让机械臂画圈...")
-
-    for i in range(steps):
-        phase = i * 0.05
-
-        # 构造目标关节位置
-        target_positions = {}
-        for j in range(min(6, env.model.nu)):
-            amp = 0.3 if j < 3 else 0.15
-            angle = amp * np.sin(phase + j * 0.8)
-            joint_name = env.model.joint_id2name(j)
-            target_positions[joint_name] = np.array([angle])
-
-        env.set_joint_qpos(target_positions)
-        env.mj_forward()
-        env.render()
-        time.sleep(0.02)
-
-    print("完成！")
 ```
 
 ---
@@ -192,13 +163,11 @@ def draw_circle_manual(env, steps: int = 300):
 ```python
 def print_qpos_layout(env):
     """打印 qpos 数组中每个关节的位置"""
-    from orca_gym.core.orca_gym_local import get_qpos_size
-    
     offset = 0
     for i in range(env.model.njnt):
         name = env.model.joint_id2name(i)
         joint_info = env.model.get_joint_byname(name)
-        nq = get_qpos_size(joint_info["Type"])
+        nq = joint_info.get("NQ", 1)  # 关节在 qpos 中的元素数
         print(f"qpos[{offset:2d}:{offset+nq:2d}]  {name}  (nq={nq})")
         offset += nq
 ```

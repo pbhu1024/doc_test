@@ -7,14 +7,14 @@ OrcaGym 提供 Robosuite 适配器用于机器人操控任务。
 ```
 orca_gym/adapters/robosuite/
 ├── __init__.py
-├── macros.py                 # 宏定义和常量
+├── macros.py # 宏定义和常量
 └── utils/
-    ├── control_utils.py      # 控制工具
-    ├── errors.py             # 错误定义
-    ├── binding_utils.py      # 绑定工具
-    ├── robot_utils.py        # 机器人工具
-    ├── placement_samplers.py # 物体放置采样
-    └── log_utils.py          # 日志工具
+ ├── control_utils.py # 控制工具
+ ├── errors.py # 错误定义
+ ├── binding_utils.py # 绑定工具
+ ├── robot_utils.py # 机器人工具
+ ├── placement_samplers.py # 物体放置采样
+ └── log_utils.py # 日志工具
 ```
 
 ## 使用方式
@@ -27,8 +27,8 @@ Robosuite 适配器提供了一系列工具函数，用于：
 - 错误处理
 
 ```python
-from orca_gym.adapters.robosuite import macros
-from orca_gym.adapters.robosuite.utils import control_utils, robot_utils
+from orca_adapters.robosuite import macros
+from orca_adapters.robosuite.utils import control_utils, robot_utils
 
 # 使用 Robosuite 风格的工具
 ```

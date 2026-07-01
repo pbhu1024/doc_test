@@ -27,23 +27,23 @@
 我们设计了一条**由浅入深、层层递进**的学习路径。每一步只引入一个新概念：
 
 ```
-🔌 Hello World          了解最简仿真循环是什么样的
-    │
-    └── 🎬 场景搭建       学会往场景里放机器人、物体、灯光
-            │
-            └── 🏗️ 第一个环境   学会写自己的环境类
-                    │
-                    └── 📡 读取状态     学会查询关节角度、body 位姿
-                            │
-                            └── 🦾 让机器人动起来  理解 qpos/qvel，控制关节
-                                    │
-                                    └── 📷 相机与视觉   获取 RGB-D 相机图像
-                                            │
-                                            └── 🎮 简单控制器    编写 PD 控制器
-                                                    │
-                                                    └── 🏆 搭建一个任务   组合所有知识，完成到达任务
-                                                    │
-                                                    └── 🧠 PPO 训练      用 SB3 RL 训练控制器
+🔌 Hello World 了解最简仿真循环是什么样的
+ │
+ └── 🎬 场景搭建 学会往场景里放机器人、物体、灯光
+ │
+ └── 🏗️ 第一个环境 学会写自己的环境类
+ │
+ └── 📡 读取状态 学会查询关节角度、body 位姿
+ │
+ └── 🦾 让机器人动起来 理解 qpos/qvel，控制关节
+ │
+ └── 📷 相机与视觉 获取 RGB-D 相机图像
+ │
+ └── 🎮 简单控制器 编写 PD 控制器
+ │
+ └── 🏆 搭建一个任务 组合所有知识，完成到达任务
+ │
+ └── 🧠 PPO 训练 用 SB3 RL 训练控制器
 ```
 
 | 章节 | 新概念 | 预计时间 |
@@ -73,39 +73,39 @@ OrcaGym 将仿真世界分为两部分：
 
 ```python
 # model — 静态，描述结构
-print(env.model.nq)            # 一共几个位置变量
-print(env.model.nv)            # 一共几个速度变量
-print(env.model.nu)            # 一共几个执行器（控制维度）
+print(env.model.nq) # 一共几个位置变量
+print(env.model.nv) # 一共几个速度变量
+print(env.model.nu) # 一共几个执行器（控制维度）
 
-# data — 动态，反映当前状态（Euler 体系：OrcaGymDataView，零拷贝只读视图）
-print(env.data.qpos)  # 当前位置 → 每一步仿真后都会变
-print(env.data.qvel)  # 当前速度
-print(env.data.time)  # 仿真时间
+# data — 动态，反映当前状态（：OrcaGymDataView，零拷贝只读视图）
+print(env.data.qpos) # 当前位置 → 每一步仿真后都会变
+print(env.data.qvel) # 当前速度
+print(env.data.time) # 仿真时间
 ```
 
 ### 仿真时间
 
 ```
-time_step  = 0.001 秒    ← 物理引擎每步的时间（很小，保证精度）
-frame_skip = 20          ← 每次 step() 物理引擎走几步
+time_step = 0.001 秒 ← 物理引擎每步的时间（很小，保证精度）
+frame_skip = 20 ← 每次 step() 物理引擎走几步
 dt = 0.001 × 20 = 0.02秒 ← 你的控制指令每隔多久更新一次（50Hz）
 ```
 
-### 环境类层次（推荐 Euler 体系）
+### 环境类层次（推荐 ）
 
 ```
 gymnasium.Env
-  └── OrcaGymEulerEnv         # 👈 推荐：Euler 体系（新主路径）
-        ├── 组合 OrcaGymEuler 仿真核心（内部 _gym，不对外暴露）
-        ├── .data → OrcaGymDataView（完整状态零拷贝只读视图）
-        ├── .model → OrcaGymModel（模型结构信息）
-        ├── .sim_config → SimConfig（求解器配置）
-        └── .ctrl → np.ndarray（当前控制输入）
+ └── OrcaGymEulerEnv # 👈 推荐：
+ ├── 组合 OrcaGymEuler 仿真核心
+ ├── .data → OrcaGymDataView（完整状态零拷贝只读视图）
+ ├── .model → OrcaGymModel（模型结构信息）
+ ├── .sim_config → SimConfig（求解器配置）
+ └── .ctrl → np.ndarray（当前控制输入）
 
-  └── OrcaGymLocalEnv         # 老路径，维护模式，不推荐新项目使用
+ └── OrcaGymLocalEnv # ，维护模式，不推荐新项目使用
 ```
 
-> **推荐 Euler 体系**：`OrcaGymEulerEnv` 是当前推荐的新入口。老体系 `OrcaGymLocalEnv` 处于维护模式，逐步废弃。
+> **推荐 **：`OrcaGymEulerEnv` 是当前推荐的新入口。 `OrcaGymLocalEnv` 处于维护模式，逐步废弃。
 > 可运行的完整示例见 [OrcaPlayground examples/euler/](https://github.com/OrcaGym/OrcaPlayground)。
 
 ---

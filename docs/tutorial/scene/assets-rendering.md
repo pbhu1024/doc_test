@@ -15,10 +15,10 @@ OrcaGym 通过 OrcaStudio/OrcaLab 实现场景的 3D 渲染。
 
 ```python
 # USDZ 转 XML
-from orca_gym.tools.assets import usdz_to_xml
+from orca_tools.assets import usdz_to_xml
 
 # 纹理处理
-from orca_gym.tools.assets import texture_processer
+from orca_tools.assets import texture_processer
 ```
 
 ## 资源缓存
@@ -27,7 +27,7 @@ from orca_gym.tools.assets import texture_processer
 
 ```python
 # 缓存目录
-# Euler: 通过 studio bridge 离线配置；Local: env.gym.xml_file_dir (≈ ~/.orcagym/tmp/)
+# 资源缓存在 ~/.orcagym/tmp/
 
 # 通过文件锁安全访问
 # 支持多进程并发下载

@@ -2,61 +2,24 @@
 
 欢迎来到 **OrcaGym** 文档！
 
-OrcaGym 是由松应科技开发的开源具身仿真框架，提供与 OpenAI Gym/Gymnasium 完全兼容的接口，同时OrcaLab以及OrcaStudio。
+OrcaGym 是一个开源的机器人仿真框架，提供与 OpenAI Gym/Gymnasium 完全兼容的接口，帮助你在仿真环境中训练和测试机器人控制策略。
 
 ---
 
-## 快速了解
+## 核心特性
 
-OrcaGym 核心特性包括：
-
-- :material-gymnastics: **Gymnasium 兼容** — 与现有 RL 算法无缝集成
-- :material-engine: **多物理后端** — 同时支持 MuJoCo/PhysX/ODE
-- :material-cloud: **分布式部署** — 通过 gRPC 实现混合本地/远程操作
-- :material-camera: **光线追踪渲染** — 逼真的视觉观察
-- :material-robot: **多智能体支持** — 原生异构智能体管理
-- :material-shield: **封装隔离** — Euler 体系（新主路径）通过多层机制引导正确的 API 使用
-
----
-
-## 核心包结构
-
-```
-orca_gym/
-├── core/                    # 核心仿真接口
-│   ├── euler/               #   Euler 体系（新主路径）
-│   │   ├── orca_gym_euler.py     # OrcaGymEuler
-│   │   ├── mujoco_sim_core.py    # MuJoCoSimCore
-│   │   ├── sim_config.py         # SimConfig
-│   │   ├── orca_gym_data_view.py # OrcaGymDataView
-│   │   ├── model_registry.py     # ModelRegistry
-│   │   └── orca_studio_bridge.py # OrcaStudioBridge
-│   ├── orca_gym_model.py    #   OrcaGymModel（两套体系共用）
-│   ├── orca_gym_local.py    #   OrcaGymLocal（老体系）
-│   └── ...
-├── environment/             # Gymnasium 兼容的环境基类
-│   ├── euler/               #   Euler 体系
-│   │   └── orca_gym_euler_env.py  # OrcaGymEulerEnv（✅ 推荐入口）
-│   ├── orca_gym_env_mixin.py      # OrcaGymEnvMixin（两套共用）
-│   ├── orca_gym_env.py            # OrcaGymBaseEnv（老体系基类）
-│   └── orca_gym_local_env.py      # OrcaGymLocalEnv（老体系）
-├── protos/                  # gRPC 协议定义
-├── scene/                   # 场景管理与运行时
-├── sensor/                  # 传感器 (RGB-D 相机等)
-├── utils/                   # 工具函数 (旋转、控制器、IK)
-├── devices/                 # 输入设备 (手柄、键盘)
-├── adapters/                # 框架适配器 (RLlib, Robomimic, Robosuite)
-├── tools/                   # 工具集 (地形生成, HDF5 查看器, 资源处理)
-├── scripts/                 # CLI 脚本 (仿真循环, 相机监视)
-└── log/                     # 日志系统
-```
+- :material-gymnastics: **Gymnasium 兼容** — 与 Stable-Baselines3、RLlib 等主流强化学习库无缝集成
+- :material-engine: **多物理后端** — 支持 MuJoCo、PhysX、ODE 等多种物理引擎
+- :material-cloud: **分布式部署** — 支持本地开发和大规模远程训练
+- :material-camera: **光线追踪渲染** — 生成逼真的视觉观测
+- :material-robot: **多智能体支持** — 原生支持同构和异构多智能体场景
 
 ---
 
 ## 谁应该使用 OrcaGym？
 
 - **强化学习研究者** — 需要高性能、标准化的 Gymnasium 环境来训练策略
-- **机器人开发者** — 需要与 OrcaStudio、OrcaLab 平台集成的工作流
+- **机器人开发者** — 需要仿真环境来开发和测试机器人控制算法
 - **仿真工程师** — 需要多物理后端的灵活性和分布式部署能力
 - **教育工作者** — 需要易于上手的机器人仿真教学平台
 
@@ -64,14 +27,13 @@ orca_gym/
 
 ## 配套产品
 
-OrcaGym 是 [松应科技](http://orca3d.cn/) 机器人仿真生态的一部分：
+OrcaGym 是机器人仿真生态的一部分：
 
 | 产品 | 说明 |
 |------|------|
 | **OrcaStudio** | 可视化场景编辑与仿真管理工具 |
 | **OrcaLab** | 云端机器人训练与评估平台 |
 | **OrcaGym** (本仓库) | Python 仿真接口库 |
-| **OrcaManipulation** | 遥操作、数据采集与示例库 |
 
 ---
 

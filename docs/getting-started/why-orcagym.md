@@ -8,7 +8,7 @@
 |------|---------|-----------|---------------|----------|--------|
 | Gymnasium API | ✅ 完全兼容 | ❌ 自定义 VecEnv | 需手动封装 | ✅ | ❌ |
 | 多物理后端 | ✅ MuJoCo/PhysX/ODE | ❌ PhysX only | ❌ MuJoCo only | ❌ Bullet only | ❌ PhysX only |
-| 分布式部署 | ✅ gRPC 原生 | ❌ 单机 | ❌ 单机 | ❌ 单机 | ❌ 单机 |
+| 分布式部署 | ✅ 原生支持 | ❌ 单机 | ❌ 单机 | ❌ 单机 | ❌ 单机 |
 | 光线追踪 | ✅ | ❌ | ❌ | ❌ | ✅ |
 | GPU 加速 | ✅ (通过后端) | ✅ (原生) | ❌ (CPU) | ❌ (CPU) | ✅ |
 | 多智能体 | ✅ 原生 | ⚠️ 需手动 | ⚠️ 需手动 | ⚠️ 需手动 | ✅ |
@@ -21,10 +21,9 @@
 
 OrcaGym 严格遵循 Gymnasium 规范，意味着：
 
-- 现有 RL 算法库 **无需修改** 即可运行
+- 现有 RL 算法库**无需修改**即可运行
 - `env.step()`、`env.reset()` 等调用完全符合预期
 - 支持 `Dict` 和 `Box` 两种观测空间
-- 自动生成 `action_space` 和 `observation_space`
 
 ```python
 # 与任何 Gymnasium 兼容的 RL 库一起使用
@@ -37,15 +36,15 @@ model.learn(total_timesteps=1_000_000)
 
 ### 2. 云原生分布式架构
 
-与单机仿真器不同，OrcaGym 基于 gRPC 的通信架构天然支持：
+与单机仿真器不同，OrcaGym 天然支持：
 
 - **本地模式**：Python 进程内直接驱动 MuJoCo，适合开发调试
 - **远程模式**：Python 客户端连接远程 OrcaStudio/OrcaLab，适合大规模训练
 - **混合模式**：训练在远端，策略执行在本地
 
 ```
-开发阶段：OrcaGym Local → 快速迭代
-部署阶段：OrcaGym Remote → 弹性扩展
+开发阶段：本地模式 → 快速迭代
+部署阶段：远程模式 → 弹性扩展
 ```
 
 ### 3. 可视化与调试生态
@@ -57,10 +56,6 @@ OrcaGym 与 OrcaStudio/OrcaLab 深度集成，提供：
 - 关节/传感器数据实时监视
 - 视频录制与回放
 
-### 4. 从 Isaac Gym 轻松迁移
-
-专门提供了 [Isaac Gym 迁移指南](../migration/isaac-gym-migration.md)，帮助将四足/人形机器人等 RL 任务平滑过渡到 OrcaGym。
-
 ## 适用场景
 
 | 场景 | 推荐理由 |
@@ -69,7 +64,7 @@ OrcaGym 与 OrcaStudio/OrcaLab 深度集成，提供：
 | **机械臂操控** | 逆运动学 + 等式约束 + Mocap 操控 |
 | **多智能体协作** | 原生多智能体 + 异步环境 |
 | **视觉 RL** | 光线追踪 + RGB-D 传感器 |
-| **大规模分布式训练** | gRPC 通信 + 多节点扩展 |
+| **大规模分布式训练** | 多节点扩展 |
 | **机器人教学** | 标准化 API + 丰富示例 |
 
 ## 局限性

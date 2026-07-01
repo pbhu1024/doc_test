@@ -161,46 +161,6 @@ pd = SimplePDController(nu=nu, kp=150, kd=15)  # 有点迟钝，回退到 12
 
 ---
 
-## 进阶：带积分项的 PID
-
-PD 有一个缺陷：如果有持续的外力（如重力），可能存在**稳态误差**——关节停不到目标位置。
-
-加入 **I（积分）项** 可以消除稳态误差：
-
-```python
-class PIDController:
-    """PID = PD + 积分项，消除稳态误差"""
-
-    def __init__(self, nu: int, kp=100.0, ki=1.0, kd=10.0, dt=0.02):
-        self.nu = nu
-        self.kp = np.full(nu, kp)
-        self.ki = np.full(nu, ki)
-        self.kd = np.full(nu, kd)
-        self.dt = dt
-        self._integral = np.zeros(nu)  # 累积误差
-
-    def compute(self, target_qpos, current_qpos, current_qvel):
-        pos_error = target_qpos - current_qpos[:self.nu]
-        vel_error = np.zeros(self.nu) - current_qvel[:self.nu]
-
-        # 累积积分（带限幅防止积分饱和）
-        self._integral += pos_error * self.dt
-        self._integral = np.clip(self._integral, -10.0, 10.0)
-
-        torque = (
-            self.kp * pos_error
-            + self.ki * self._integral
-            + self.kd * vel_error
-        )
-        return torque.astype(np.float64)
-
-    def reset(self):
-        """重置积分累积（在每个 episode 开始时调用）"""
-        self._integral = np.zeros(self.nu)
-```
-
----
-
 ## 控制器在环境中的位置
 
 ```
@@ -226,40 +186,45 @@ class PIDController:
 ## 完整示例：位置控制环境
 
 ```python
-class PositionControlEnv(OrcaGymLocalEnv):
+class PositionControlEnv(OrcaGymEulerEnv):
     """动作 = 目标关节角度，内部用 PD 转化为力矩"""
 
     def __init__(self, frame_skip, orcagym_addr, agent_names, time_step, **kwargs):
-        super().__init__(frame_skip, orcagym_addr, agent_names, time_step, **kwargs)
-        self.nu = self.model.nu
-        self.nq = self.model.nq
-        self.nv = self.model.nv
+        super().__init__(
+            frame_skip=frame_skip,
+            orcagym_addr=orcagym_addr,
+            agent_names=agent_names,
+            time_step=time_step,
+            **kwargs,
+        )
 
         # 创建 PD 控制器
-        self._pd = SimplePDController(nu=self.nu, kp=150.0, kd=12.0)
+        self._pd = SimplePDController(nu=self.model.nu, kp=150.0, kd=12.0)
 
-        self._set_action_space()
-        self._set_obs_space()
-
-    def _set_action_space(self):
         # 动作空间 = 关节限位范围
         ranges = []
-        for i in range(self.nu):
+        for i in range(self.model.nu):
             joint_name = self.model.joint_id2name(i)
             info = self.model.get_joint_byname(joint_name)
             if info.get("Limited", False):
                 ranges.append(info["Range"])
             else:
                 ranges.append([-3.14, 3.14])
-        self.action_space = self.generate_action_space(np.array(ranges))
 
-    def _set_obs_space(self):
-        self.observation_space = self.generate_observation_space(self._get_obs())
+        self.action_space = spaces.Box(
+            low=np.array([r[0] for r in ranges], dtype=np.float32),
+            high=np.array([r[1] for r in ranges], dtype=np.float32),
+        )
+        obs = self._get_obs()
+        self.observation_space = spaces.Dict({
+            "joint_pos": spaces.Box(-np.inf, np.inf, shape=(self.model.nq,)),
+            "joint_vel": spaces.Box(-np.inf, np.inf, shape=(self.model.nv,)),
+        })
 
     def _get_obs(self):
         return {
-            "joint_pos": self.data.qpos[:self.nq].copy(),
-            "joint_vel": self.data.qvel[:self.nv].copy(),
+            "joint_pos": self.data.qpos.copy().astype(np.float32),
+            "joint_vel": self.data.qvel.copy().astype(np.float32),
         }
 
     def step(self, action):
@@ -272,12 +237,15 @@ class PositionControlEnv(OrcaGymLocalEnv):
         self.do_simulation(ctrl, self.frame_skip)
 
         obs = self._get_obs()
-        tracking_error = np.mean(np.abs(action - self.data.qpos[:self.nu]))
+        tracking_error = np.mean(np.abs(action - self.data.qpos[:self.model.nu]))
         reward = -tracking_error  # 追踪越准，奖励越高
         return obs, reward, False, False, {}
 
     def reset_model(self):
-        self.ctrl = np.zeros(self.nu, dtype=np.float32)
+        self.set_joint_qpos(self.init_qpos)
+        self.set_joint_qvel(self.init_qvel)
+        self.mj_forward()
+        self._sync_view()
         return self._get_obs(), {}
 ```
 
