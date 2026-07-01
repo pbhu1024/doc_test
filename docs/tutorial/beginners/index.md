@@ -42,18 +42,21 @@
                                             └── 🎮 简单控制器    编写 PD 控制器
                                                     │
                                                     └── 🏆 搭建一个任务   组合所有知识，完成到达任务
+                                                    │
+                                                    └── 🧠 PPO 训练      用 SB3 RL 训练控制器
 ```
 
 | 章节 | 新概念 | 预计时间 |
 |------|--------|----------|
-| [🔌 Hello World](hello-world.md) | 连接仿真、`step()`、`render()` | 5 分钟 |
+| [🔌 Hello World](hello-world.md) | 离线模式、`do_simulation`、`data.qpos` | 5 分钟 |
 | [🎬 场景搭建](scene-setup.md) | `OrcaGymScene`、`Actor`、资产摆放 | 15 分钟 |
-| [🏗️ 第一个环境](your-first-env.md) | 继承 `OrcaGymLocalEnv`、实现 `step`/`reset` | 15 分钟 |
-| [📡 读取状态](state-queries.md) | `query_joint_qpos`、`get_body_xpos`、传感器 | 15 分钟 |
-| [🦾 让机器人动起来](move-a-joint.md) | `qpos`/`qvel`、`set_joint_qpos`、单关节控制 | 20 分钟 |
+| [🏗️ 第一个环境](your-first-env.md) | 继承 `OrcaGymEulerEnv`、实现 `step`/`reset_model`/`_get_obs` | 15 分钟 |
+| [📡 读取状态](state-queries.md) | `query_joint_qpos`、`get_body_xpos_xmat_xquat`、传感器 | 15 分钟 |
+| [🦾 让机器人动起来](move-a-joint.md) | `qpos`/`qvel`、`set_joint_qpos`、`do_simulation` | 20 分钟 |
 | [📷 相机与视觉](camera-and-vision.md) | `CameraWrapper`、RGB-D 图像获取 | 15 分钟 |
 | [🎮 简单控制器](simple-controller.md) | PD 控制器原理、参数调优 | 20 分钟 |
 | [🏆 搭建一个任务](build-a-task.md) | 组合一切：感知→决策→控制，完成到达目标 | 30 分钟 |
+| [🧠 PPO 训练](ppo-training.md) | SB3 PPO、奖励函数设计、离线训练 | 30 分钟 |
 
 ---
 
@@ -66,16 +69,18 @@ OrcaGym 将仿真世界分为两部分：
 | 概念 | 类型 | 比喻 | 例子 |
 |------|------|------|------|
 | `env.model` | `OrcaGymModel` | 机器人的**说明书**（不会变） | 有几个关节、每个关节叫什么名字 |
-| `env.data` | `OrcaGymData` | 机器人的**当前状态**（每步都变） | 关节现在转了多少度、速度是多少 |
+| `env.data` | `OrcaGymDataView` | 机器人的**当前状态**（每步都变） | 关节现在转了多少度、速度是多少 |
 
 ```python
 # model — 静态，描述结构
 print(env.model.nq)            # 一共几个位置变量
-print(env.model.joint_id2name(0))  # 第 0 号关节叫什么
+print(env.model.nv)            # 一共几个速度变量
+print(env.model.nu)            # 一共几个执行器（控制维度）
 
-# data — 动态，反映当前状态
+# data — 动态，反映当前状态（Euler 体系：OrcaGymDataView，零拷贝只读视图）
 print(env.data.qpos)  # 当前位置 → 每一步仿真后都会变
 print(env.data.qvel)  # 当前速度
+print(env.data.time)  # 仿真时间
 ```
 
 ### 仿真时间
@@ -86,15 +91,22 @@ frame_skip = 20          ← 每次 step() 物理引擎走几步
 dt = 0.001 × 20 = 0.02秒 ← 你的控制指令每隔多久更新一次（50Hz）
 ```
 
-### 环境类层次
+### 环境类层次（推荐 Euler 体系）
 
 ```
 gymnasium.Env
-  └── OrcaGymBaseEnv          # 抽象基类
-        ├── OrcaGymLocalEnv   # 👈 新手始终用这个
-        ├── OrcaGymRemoteEnv  # 远程后端
-        └── OrcaGymWarpEnv    # GPU 加速
+  └── OrcaGymEulerEnv         # 👈 推荐：Euler 体系（新主路径）
+        ├── 组合 OrcaGymEuler 仿真核心（内部 _gym，不对外暴露）
+        ├── .data → OrcaGymDataView（完整状态零拷贝只读视图）
+        ├── .model → OrcaGymModel（模型结构信息）
+        ├── .sim_config → SimConfig（求解器配置）
+        └── .ctrl → np.ndarray（当前控制输入）
+
+  └── OrcaGymLocalEnv         # 老路径，维护模式，不推荐新项目使用
 ```
+
+> **推荐 Euler 体系**：`OrcaGymEulerEnv` 是当前推荐的新入口。老体系 `OrcaGymLocalEnv` 处于维护模式，逐步废弃。
+> 可运行的完整示例见 [OrcaPlayground examples/euler/](https://github.com/OrcaGym/OrcaPlayground)。
 
 ---
 

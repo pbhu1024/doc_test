@@ -165,7 +165,7 @@ def query_site_size(site_names: list[str]) -> dict[str, np.ndarray]
 def query_sensor_data(sensor_names: list[str]) -> dict[str, np.ndarray]
 def query_actuator_torques(actuator_names: list[str]) -> dict[str, np.ndarray]
 def query_contact_simple() -> list[dict]
-def query_contact_force(contact_ids: list[int]) -> dict[int, np.ndarray]
+def query_contact_force(contact_ids: list[int]) -> dict[int, np.ndarray]  # {contact_id: force_array(6,)}
 def get_cfrc_ext() -> np.ndarray
 def get_goal_bounding_box(geom_name: str) -> np.ndarray
 def body_subtree_mass(body_name: str) -> float
@@ -698,6 +698,10 @@ def init_mocap_dict(mocap_dict: dict)
 | 实体 | `name2id` | `id2name` | 获取全部 |
 |------|-----------|-----------|---------|
 | Body | `body_name2id(n)` | `body_id2name(i)` | `get_body_dict()` |
+
+> **`get_joint_dict()` 返回** `{joint_name: {"Range": [lo, hi], "Limited": bool, "Type": int, ...}}`。示例中用于读取关节限位以做 IK clamp。
+> **`get_body_dict()` 返回** `{body_name: {...}}`（body 元信息）。
+> **`get_geom_dict()` 返回** `{geom_name: {...}}`（geom 元信息）。
 | Joint | `joint_name2id(n)` | `joint_id2name(i)` | `get_joint_dict()` |
 | Actuator | `actuator_name2id(n)` | `actuator_id2name(i)` | `get_actuator_dict()` |
 | Geom | `geom_name2id(n)` | `geom_id2name(i)` | `get_geom_dict()` |
