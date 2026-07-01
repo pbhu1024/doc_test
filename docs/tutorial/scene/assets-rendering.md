@@ -27,7 +27,7 @@ from orca_gym.tools.assets import texture_processer
 
 ```python
 # 缓存目录
-print(env.gym.xml_file_dir)  # ~/.orcagym/tmp/
+# Euler: 通过 studio bridge 离线配置；Local: env.gym.xml_file_dir (≈ ~/.orcagym/tmp/)
 
 # 通过文件锁安全访问
 # 支持多进程并发下载

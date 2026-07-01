@@ -19,7 +19,7 @@ env.anchor_actor("target_object", AnchorType.WELD)
 
 # 移动锚点
 env.set_mocap_pos_and_quat({
-    env._anchor_body_name: {
+    "ActorManipulator_Anchor"  # mocap body 名称（模型需含此 body）: {
         "pos": np.array([0.5, 0.0, 0.8]),
         "quat": np.array([1.0, 0.0, 0.0, 0.0]),
     }
@@ -45,6 +45,6 @@ if body_name is not None:
 
 ```python
 # 计算物体的轴对齐包围盒
-bbox = env.gym.get_goal_bounding_box("target_object")
+bbox = env.get_goal_bounding_box("target_object")  # 两套体系通用
 print(f"包围盒: min={bbox['min']}, max={bbox['max']}, size={bbox['size']}")
 ```

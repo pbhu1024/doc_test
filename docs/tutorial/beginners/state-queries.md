@@ -2,8 +2,6 @@
 
 上一节我们只读了 `self.data.qpos` 和 `self.data.qvel`。这一节，你将学会用 OrcaGym 提供的**查询 API** 来获取更丰富的状态信息。
 
----
-
 ## 你能查到什么？
 
 OrcaGym 提供了丰富的查询接口，按查询对象分类：
@@ -13,12 +11,11 @@ OrcaGym 提供了丰富的查询接口，按查询对象分类：
 | 关节 | `query_joint_qpos(names)` | 关节角度 |
 | 关节 | `query_joint_qvel(names)` | 关节速度 |
 | Body | `get_body_xpos_xmat_xquat(names)` | body 的位置 + 旋转矩阵 + 四元数 |
+| Body | `env.data.body_xpos(name)` | body 世界位置（Euler 体系，按名称） |
 | Site | `query_site_pos_and_quat(names)` | site 的位置 + 四元数 |
 | Site | `query_site_xvalp_xvalr(names)` | site 的线速度 + 角速度 |
 | 传感器 | `query_sensor_data(names)` | 各类传感器的读数 |
 | 执行器 | `query_actuator_torques(names)` | 执行器当前力矩 |
-
----
 
 ## 1. 查询关节状态
 
@@ -32,17 +29,15 @@ def check_joints(env):
 
     # 按名称查询位置
     qpos = env.query_joint_qpos(joint_names)
-    # 返回: {"joint_0": 0.52, "joint_1": -0.31, ...}
+    # 返回: {"joint_0": array([0.52]), "joint_1": array([-0.31]), ...}
 
     # 按名称查询速度
     qvel = env.query_joint_qvel(joint_names)
-    # 返回: {"joint_0": 0.01, "joint_1": -0.02, ...}
 
     for name in joint_names:
         pos = qpos[name]
         vel = qvel[name]
-        # 对于旋转关节，pos 是标量（弧度）；对于自由关节，pos 是数组
-        pos_str = f"{pos:.3f}" if np.isscalar(pos) or len(pos) == 1 else f"{pos}"
+        pos_str = f"{pos[0]:.3f}" if len(pos) == 1 else f"{pos}"
         print(f"  {name:20s}: pos={pos_str}, vel={vel}")
 
     return qpos, qvel
@@ -54,10 +49,8 @@ def check_joints(env):
 def inspect_joint(env, joint_name: str):
     """查看单个关节的详细信息"""
     info = env.model.get_joint_byname(joint_name)
-    # info 是一个字典，包含该关节的所有属性
     print(f"关节: {joint_name}")
-    print(f"  类型: {info['Type']}")        # hinge(旋转) / slide(滑动) / free(自由) / ball(球)
-    print(f"  维度: qpos_size={get_qpos_size(info['Type'])}, dof_size={get_dof_size(info['Type'])}")
+    print(f"  类型: {info['Type']}")        # hinge / slide / free / ball
     print(f"  有限位: {info['Limited']}")    # 是否有关节限位
     if info['Limited']:
         print(f"  范围: [{info['Range'][0]:.3f}, {info['Range'][1]:.3f}] 弧度")
@@ -67,8 +60,6 @@ def inspect_joint(env, joint_name: str):
     dof_addr = env.jnt_dofadr(joint_name)    # 在 qvel 数组中的起始位置
     print(f"  qpos 地址: {qpos_addr}, qvel 地址: {dof_addr}")
 ```
-
----
 
 ## 2. 查询 Body 位姿
 
@@ -81,28 +72,22 @@ def check_body_pose(env):
     # 获取所有 body 的名字
     body_names = env.model.get_body_names()
     print(f"共有 {len(body_names)} 个 body:")
-    for name in body_names[:10]:  # 只打印前 10 个
+    for name in list(body_names)[:10]:
         print(f"  - {name}")
-    print(f"  ... 共 {len(body_names)} 个")
 
-    # 查询指定 body 的位姿
-    # 假设场景中有 "robot_0_panda_link0" 和 "target_cube"
-    query_names = ["robot_0_panda_link0", "robot_0_panda_link7"]
-    xpos, xmat, xquat = env.get_body_xpos_xmat_xquat(query_names)
-
-    # 返回值是拼接后的数组，需要按维度解析
-    # xpos: 每 3 个元素一个 body 的 [x, y, z]
-    # xmat: 每 9 个元素一个 body 的 3×3 旋转矩阵（按行展开）
-    # xquat: 每 4 个元素一个 body 的 [w, x, y, z]
-    for i, name in enumerate(query_names):
-        pos = xpos[i*3:(i+1)*3]
-        quat = xquat[i*4:(i+1)*4]
+    # Euler 体系：按名称逐个查询（推荐）
+    for name in ["robot_0_base_link", "robot_0_ee_link"]:
+        pos = env.data.body_xpos(name)       # (3,) 世界坐标
+        quat = env.data.body_xquat(name)     # (4,) [w,x,y,z]
         print(f"\n{name}:")
-        print(f"  位置 (世界坐标): [{pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}] m")
-        print(f"  姿态 (四元数):   [{quat[0]:.3f}, {quat[1]:.3f}, {quat[2]:.3f}, {quat[3]:.3f}]")
-```
+        print(f"  位置: [{pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}] m")
+        print(f"  姿态: [{quat[0]:.3f}, {quat[1]:.3f}, {quat[2]:.3f}, {quat[3]:.3f}]")
 
----
+    # 批量查询
+    body_dict = env.get_body_xpos_xmat_xquat(["robot_0_base_link", "robot_0_ee_link"])
+    for name, pose in body_dict.items():
+        print(f"{name}: pos={pose['xpos']}, quat={pose['xquat']}")
+```
 
 ## 3. 查询 Site
 
@@ -123,7 +108,6 @@ def check_end_effector(env):
 
     print(f"末端执行器 (site: {ee_site}):")
     print(f"  位置: [{ee_pos[0]:.3f}, {ee_pos[1]:.3f}, {ee_pos[2]:.3f}]")
-    print(f"  姿态: [{ee_quat[0]:.3f}, {ee_quat[1]:.3f}, {ee_quat[2]:.3f}, {ee_quat[3]:.3f}]")
 
     # 查询速度（线速度 + 角速度）
     linear_vel, angular_vel = env.query_site_xvalp_xvalr([ee_site])
@@ -150,8 +134,6 @@ def check_ee_relative_to_base(env):
     print(f"末端相对于基座: pos={ee_rel['xpos']}, quat={ee_rel['xquat']}")
 ```
 
----
-
 ## 4. 查询传感器
 
 如果 MuJoCo 模型中有传感器（加速度计、陀螺仪、力传感器等），可以这样读：
@@ -173,7 +155,6 @@ def read_sensors(env):
 
     # 批量查询
     sensor_data = env.query_sensor_data(sensor_names)
-
     for name, data in sensor_data.items():
         print(f"  {name}: {data}")
 
@@ -189,11 +170,9 @@ def read_sensors(env):
 | `force` | 测量单轴力 | (1,) |
 | `torque` | 测量单轴力矩 | (1,) |
 | `force_torque` | 六维力/力矩 | (6,) |
-| `jointpos` | 关节位置（冗余） | (1,) |
-| `jointvel` | 关节速度（冗余） | (1,) |
+| `jointpos` | 关节位置 | (1,) |
+| `jointvel` | 关节速度 | (1,) |
 | `touch` | 接触检测 | (1,) |
-
----
 
 ## 5. 查询执行器力矩
 
@@ -203,10 +182,8 @@ def read_actuator_torques(env):
     actuator_names = [env.model.actuator_id2name(i) for i in range(env.model.nu)]
     torques = env.query_actuator_torques(actuator_names)
     for name, t in torques.items():
-        print(f"  {name}: {t:.3f} N·m")
+        print(f"  {name}: {t}")
 ```
-
----
 
 ## 6. 实用汇总：StateDumper
 
@@ -222,10 +199,10 @@ class StateDumper:
     def dump(self):
         env = self.env
         print("=" * 60)
-        print(f"仿真时间: {env.data.time:.3f}s  (步数: {int(env.data.time/env.dt)})")
+        print(f"仿真时间: {env.data.time:.3f}s")
 
         # 关节
-        joint_names = list(env.model.get_joint_dict().keys())[:5]  # 只看前 5 个
+        joint_names = list(env.model.get_joint_dict().keys())[:5]
         qpos = env.query_joint_qpos(joint_names)
         print("\n关节位置:")
         for name in joint_names:
@@ -256,8 +233,6 @@ for i in range(100):
         dumper.dump()
 ```
 
----
-
 ## 状态更新的时机
 
 ```
@@ -267,7 +242,7 @@ mj_forward() 或 mj_step()
   所有派生量更新（传感器、接触力、body位姿...）
         │
         ▼
-  update_data()  ← 同步到 self.data
+  sync_to_view()  ← 同步到 self.data（Euler 体系零拷贝）
         │
         ▼
   你的查询方法 ← 现在可以读到最新值
@@ -275,16 +250,14 @@ mj_forward() 或 mj_step()
 
 !!! warning "查询前必须先 forward/step"
     ```python
-    # ✅ 正确
-    env.do_simulation(ctrl, frame_skip)  # 内部做了 forward + update
+    # ✅ 正确 — Euler 体系
+    env.do_simulation(ctrl, frame_skip)  # 内部做了 step + sync_to_view
     pos = env.query_joint_qpos(["joint_0"])
 
     # ❌ 错误——读到的可能是旧数据
     env.set_joint_qpos(...)
     pos = env.query_joint_qpos(["joint_0"])  # 还没 forward！
     ```
-
----
 
 ## 下一步
 

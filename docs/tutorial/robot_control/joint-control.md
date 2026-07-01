@@ -7,15 +7,15 @@
 ```python
 # 直接设置所有执行器的控制值
 ctrl = np.array([0.1, -0.2, 0.0, ...], dtype=np.float64)  # (nu,)
-env.gym.set_ctrl(ctrl)
-env.gym.mj_step(n_frames)
-env.gym.update_data()
+env.set_ctrl(ctrl)
+env.mj_step(n_frames)
+env._gym.sync_to_view()    # Euler: 同步 DataView
 ```
 
-## 通过 do_simulation 原子化操作
+## 通过 do_simulation 原子化操作（推荐）
 
 ```python
-# do_simulation = set_ctrl + mj_step + update_data
+# do_simulation = set_ctrl + mj_step + 自动同步 data
 env.do_simulation(ctrl, n_frames=env.frame_skip)
 ```
 
@@ -31,7 +31,6 @@ env.set_joint_qpos({
 
 # 必须 forward
 env.mj_forward()
-env.update_data()
 ```
 
 ## 关节速度控制
@@ -43,7 +42,6 @@ env.set_joint_qvel({
 })
 
 env.mj_forward()
-env.update_data()
 ```
 
 ## JointController — PD 控制
@@ -52,7 +50,6 @@ env.update_data()
 from orca_gym.utils.joint_controller import JointController
 
 # 为每个关节创建一个 PD 控制器
-# JointController 是单关节控制器，需要为每个关节分别创建
 controllers = {
     "shoulder": JointController(Kp=100.0, Ki=0.1, Kd=10.0, Kv=5.0, max_speed=80.0, ctrlrange=(-80, 80)),
     "elbow":    JointController(Kp=100.0, Ki=0.1, Kd=10.0, Kv=5.0, max_speed=80.0, ctrlrange=(-80, 80)),
@@ -72,7 +69,7 @@ for joint_name, target in target_angles.items():
         dt=env.dt,
     )
 
-# 应用
+# 应用（do_simulation 自动同步 data）
 env.do_simulation(ctrl, env.frame_skip)
 ```
 
@@ -93,7 +90,7 @@ env.do_simulation(ctrl, env.frame_skip)
 ```python
 from orca_gym.utils.low_pass_filter import LowPassFilter
 
-# 创建滤波器（initial_output 需要与输入维度匹配）
+# 创建滤波器
 filter = LowPassFilter(alpha=0.1, initial_output=np.zeros(env.model.nu))
 
 # 在每步对 ctrl 滤波
@@ -112,10 +109,10 @@ def check_joint_limits(env):
         if not joint_info["Limited"]:
             continue
         
-        qpos = env.gym.query_joint_qpos([joint_name])[joint_name]
+        qpos = env.query_joint_qpos([joint_name])[joint_name]
         low, high = joint_info["Range"]
         
-        if qpos < low or qpos > high:
+        if qpos[0] < low or qpos[0] > high:
             print(f"警告: {joint_name} 超出范围: "
-                  f"{qpos.item():.3f} ∉ [{low:.3f}, {high:.3f}]")
+                  f"{qpos[0]:.3f} ∉ [{low:.3f}, {high:.3f}]")
 ```

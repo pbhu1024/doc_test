@@ -2,22 +2,20 @@
 
 上一节我们用 `OrcaGymScene` 搭了场景。这一节，你将学会如何**写一个环境类**来控制这个场景。
 
----
-
 ## 为什么要写环境类？
 
-`OrcaGymScene` 只能**搭建**场景（添加/删除物体），不能**控制**仿真（物理步进、读取状态）。要控制仿真，你需要继承 `OrcaGymLocalEnv`。
+`OrcaGymScene` 只能**搭建**场景（添加/删除物体），不能**控制**仿真（物理步进、读取状态）。要控制仿真，你需要继承环境基类。
+
+**推荐使用 `OrcaGymEulerEnv`**（新主路径），备选 `OrcaGymLocalEnv`（老路径，维护模式）。
 
 一个环境类 = 场景的"驱动程序"：
 
 ```
 OrcaGymScene  →  搭建场景（一次性）
-OrcaGymLocalEnv →  驱动仿真（循环运行）
+OrcaGymEulerEnv →  驱动仿真（循环运行）
 ```
 
----
-
-## 最小环境骨架
+## 最小环境骨架（Euler 体系，推荐）
 
 环境类需要实现 4 个方法：
 
@@ -32,19 +30,18 @@ _get_obs()       — 收集观测数据
 
 ```python
 """
-my_first_env.py — 一个最小的自定义环境
+my_first_env.py — 一个最小的自定义环境（Euler 体系）
 """
 
 import numpy as np
-from orca_gym.environment.orca_gym_local_env import OrcaGymLocalEnv
+from orca_gym.environment.euler.orca_gym_euler_env import OrcaGymEulerEnv
 
 
-class MyFirstEnv(OrcaGymLocalEnv):
+class MyFirstEnv(OrcaGymEulerEnv):
     """最简环境：观测 = 关节位置，动作 = 力矩控制，奖励 = 0"""
 
     def __init__(self, frame_skip, orcagym_addr, agent_names, time_step, **kwargs):
-        # ── 父类初始化 ──
-        # 自动完成：gRPC连接 → 下载模型 → 初始化MuJoCo → 保存初始状态
+        # ── 父类初始化（自主编排生命周期）──
         super().__init__(
             frame_skip=frame_skip,
             orcagym_addr=orcagym_addr,
@@ -54,7 +51,7 @@ class MyFirstEnv(OrcaGymLocalEnv):
         )
 
         # ── 保存常用维度 ──
-        self.nq = self.model.nq  # 位置状态维度（所有关节位置 + 自由物体位姿）
+        self.nq = self.model.nq  # 位置状态维度
         self.nv = self.model.nv  # 速度状态维度
         self.nu = self.model.nu  # 执行器数量（动作维度）
 
@@ -71,7 +68,6 @@ class MyFirstEnv(OrcaGymLocalEnv):
 
     # ── 观测空间 ───────────────────────────────────────
     def _set_obs_space(self):
-        # 先取一个样本观测，再用它推断空间
         sample = self._get_obs()
         self.observation_space = self.generate_observation_space(sample)
 
@@ -79,7 +75,7 @@ class MyFirstEnv(OrcaGymLocalEnv):
     def _get_obs(self) -> dict:
         """返回当前状态的字典。这是策略"看到"的信息。"""
         return {
-            "joint_pos": self.data.qpos[:self.nq].copy(),  # .copy() 很重要！
+            "joint_pos": self.data.qpos[:self.nq].copy(),
             "joint_vel": self.data.qvel[:self.nv].copy(),
         }
 
@@ -95,13 +91,13 @@ class MyFirstEnv(OrcaGymLocalEnv):
         ctrl_high = ctrlrange[:, 1]
         ctrl = ctrl_low + (action + 1.0) / 2.0 * (ctrl_high - ctrl_low)
 
-        # 2. 执行仿真：设置力矩 → 物理步进 → 同步数据
+        # 2. 执行仿真：do_simulation 内部自动同步 data
         self.do_simulation(ctrl, self.frame_skip)
 
         # 3. 获取新观测
         obs = self._get_obs()
 
-        # 4. 奖励 & 终止（这里留空，后面学）
+        # 4. 奖励 & 终止
         reward = 0.0
         terminated = False
         truncated = False
@@ -110,8 +106,11 @@ class MyFirstEnv(OrcaGymLocalEnv):
 
     # ── 重置 ───────────────────────────────────────────
     def reset_model(self) -> tuple:
-        """回到初始状态。父类已恢复 qpos/qvel。"""
-        self.ctrl = np.zeros(self.nu, dtype=np.float32)
+        """回到初始状态"""
+        self.set_joint_qpos(self.init_qpos)
+        self.set_joint_qvel(self.init_qvel)
+        self.mj_forward()
+        self._sync_view()
         return self._get_obs(), {}
 
 
@@ -149,8 +148,6 @@ if __name__ == "__main__":
     env.close()
 ```
 
----
-
 ## 核心概念拆解
 
 ### `do_simulation` — 一步到位的仿真步进
@@ -159,32 +156,30 @@ if __name__ == "__main__":
 self.do_simulation(ctrl, self.frame_skip)
 ```
 
-这一行等价于：
+这一行在 Euler 体系中等价于：
 
 ```python
-self.set_ctrl(ctrl)               # 1. 把力矩写进执行器
-self.mj_step(nstep=self.frame_skip)  # 2. 物理引擎算 20 步
-self.gym.update_data()            # 3. 把新状态同步到 self.data
+# 内部：_gym.step_with_coupling(ctrl, n_frames, dt)
+#     → _sim.set_ctrl(ctrl) + _sim.step(n_frames)
+# 然后：_gym.sync_to_view()
+# data 自动同步为最新状态
 ```
 
-### `self.data` — 动态状态的"快照"
+> **关键优势**：`do_simulation()` 返回后 `self.data` 已自动更新，无需手动 `update_data()`。
 
-每步 `do_simulation` 后，`self.data` 中的值会更新：
+### `self.data` — 完整状态只读视图
 
-| 属性 | 含义 | 形状 | 类比 |
-|------|------|------|------|
-| `self.data.qpos` | 广义位置 | `(nq,)` | 所有关节的角度 + 自由物体的位姿 |
-| `self.data.qvel` | 广义速度 | `(nv,)` | 所有关节的角速度 + 自由物体的速度 |
-| `self.data.qacc` | 广义加速度 | `(nv,)` | 所有关节的角加速度 |
+Euler 体系中 `self.data` 是 `OrcaGymDataView`，提供零拷贝只读视图：
 
-!!! warning "记得 `.copy()`！"
-    ```python
-    # ✅ 正确
-    pos = self.data.qpos.copy()
-    
-    # ❌ 错误 — pos 是内部缓冲区的引用，下一步会被覆盖！
-    pos = self.data.qpos
-    ```
+| 属性 | 含义 | 形状 |
+|------|------|------|
+| `self.data.qpos` | 广义位置 | `(nq,)` |
+| `self.data.qvel` | 广义速度 | `(nv,)` |
+| `self.data.qacc` | 广义加速度 | `(nv,)` |
+| `self.data.time` | 仿真时间 | 标量 |
+| `self.data.body_xpos(name)` | body 世界位置 | `(3,)` |
+
+> ⚠️ Euler 体系的 DataView 是零拷贝视图，直接读即可。若需保存历史值，调用 `.copy()`。
 
 ### 动作归一化
 
@@ -196,22 +191,20 @@ ctrl = ctrl_low + (action + 1.0) / 2.0 * (ctrl_high - ctrl_low)
 
 这样做的好处：不同机器人的力矩范围不同，但策略只需要输出 `[-1, 1]`。
 
-### 环境生命周期
+### 环境生命周期（Euler 体系）
 
 ```
-gym.make("MyFirstEnv-v0")
-  └── __init__()
-        ├── super().__init__()
-        │     ├── 建 gRPC 连接
-        │     ├── 下载模型 XML → 初始化 MuJoCo
-        │     ├── 加载初始帧 → 保存 init_qpos/init_qvel
-        │     └── model, data 就绪
-        ├── self.nq / self.nv / self.nu
-        ├── _set_action_space()
-        └── _set_obs_space()
+MyFirstEnv(...)
+  └── OrcaGymEulerEnv.__init__()
+        ├── initialize_grpc()       # 创建 _gym/_stub/_channel
+        ├── pause_simulation()
+        ├── set_time_step(time_step)
+        ├── initialize_simulation() # 加载模型 → init_simulation
+        ├── reset_simulation()      # reset_data + sync_to_view
+        └── init_qpos_qvel()        # 缓存初始状态
 
-env.reset()
-  ├── 父类: reset_simulation() → 恢复初始状态
+env.reset()  [来自 OrcaGymEnvMixin]
+  ├── reset_simulation() → 恢复初始状态
   └── reset_model() → 你的自定义逻辑
 
 env.step(action)  ← 重复 N 次
@@ -224,17 +217,14 @@ env.close()
   └── 关闭 gRPC
 ```
 
----
-
 ## 常见错误
 
 | 错误 | 原因 | 解决 |
 |------|------|------|
 | `ValueError: Action dimension mismatch` | `action.shape` ≠ `(nu,)` | 检查 `len(action)` 是否等于 `env.model.nu` |
-| 观测数据"不对" | 没 `.copy()` | 所有 `self.data.*` 都要 `.copy()` |
+| 观测数据"不对" | 没在 `mj_forward()` 后读 data | 回 `reset_model` 中确认 `mj_forward()` + `_sync_view()` 已调用 |
 | 观测全是 NaN | 在 `mj_forward()` 前读了 data | 用 `do_simulation()` 代替手动操作 |
-
----
+| `AttributeError: 'OrcaGymEulerEnv' object has no attribute 'gym'` | 在 Euler 体系用了老 API | `env.gym` 在 Euler 中不存在，用 `env._gym`（内部）或公共 API |
 
 ## 下一步
 

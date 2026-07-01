@@ -26,6 +26,7 @@ OrcaGym 是一个 **云原生机器人仿真平台**，核心特性包括：
 - :material-cloud: **分布式部署** — 通过 gRPC 实现混合本地/远程操作
 - :material-camera: **光线追踪渲染** — 逼真的视觉观察
 - :material-robot: **多智能体支持** — 原生异构智能体管理
+- :material-shield: **封装隔离** — Euler 体系通过多层机制引导正确的 API 使用
 
 ---
 
@@ -33,18 +34,32 @@ OrcaGym 是一个 **云原生机器人仿真平台**，核心特性包括：
 
 ```
 orca_gym/
-├── core/           # 核心仿真接口 (OrcaGymLocal, OrcaGymModel, OrcaGymData)
-├── environment/    # Gymnasium 兼容的环境基类
-│   └── async_env/  # 异步/向量化环境
-├── protos/         # gRPC 协议定义
-├── scene/          # 场景管理与运行时
-├── sensor/         # 传感器 (RGB-D 相机等)
-├── utils/          # 工具函数 (旋转、控制器、IK)
-├── devices/        # 输入设备 (手柄、键盘)
-├── adapters/       # 框架适配器 (RLlib, Robomimic, Robosuite)
-├── tools/          # 工具集 (地形生成, HDF5 查看器, 资源处理)
-├── scripts/        # CLI 脚本 (仿真循环, 相机监视)
-└── log/            # 日志系统
+├── core/                    # 核心仿真接口
+│   ├── euler/               #   Euler 体系（新主路径）
+│   │   ├── orca_gym_euler.py     # OrcaGymEuler（仿真核心 Facade）
+│   │   ├── mujoco_sim_core.py    # MuJoCoSimCore
+│   │   ├── sim_config.py         # SimConfig（typed 求解器配置）
+│   │   ├── orca_gym_data_view.py # OrcaGymDataView（完整状态只读视图）
+│   │   ├── model_registry.py     # ModelRegistry
+│   │   └── orca_studio_bridge.py # OrcaStudioBridge（gRPC 集成）
+│   ├── orca_gym_model.py    #   OrcaGymModel（两套体系共用）
+│   ├── orca_gym_local.py    #   OrcaGymLocal（老体系）
+│   └── ...
+├── environment/             # Gymnasium 兼容的环境基类
+│   ├── euler/               #   Euler 体系
+│   │   └── orca_gym_euler_env.py  # OrcaGymEulerEnv（推荐入口）
+│   ├── orca_gym_env_mixin.py      # OrcaGymEnvMixin（两套共用）
+│   ├── orca_gym_env.py            # OrcaGymBaseEnv（老体系基类）
+│   └── orca_gym_local_env.py      # OrcaGymLocalEnv（老体系）
+├── protos/                  # gRPC 协议定义
+├── scene/                   # 场景管理与运行时
+├── sensor/                  # 传感器 (RGB-D 相机等)
+├── utils/                   # 工具函数 (旋转、控制器、IK)
+├── devices/                 # 输入设备 (手柄、键盘)
+├── adapters/                # 框架适配器 (RLlib, Robomimic, Robosuite)
+├── tools/                   # 工具集 (地形生成, HDF5 查看器, 资源处理)
+├── scripts/                 # CLI 脚本 (仿真循环, 相机监视)
+└── log/                     # 日志系统
 ```
 
 ---

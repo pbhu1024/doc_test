@@ -44,7 +44,11 @@ brew install glfw glew
 # 检查是否在修改状态后调用了 mj_forward()
 env.set_joint_qpos(...)
 env.mj_forward()   # ← 这步必须执行
-env.update_data()
+
+# Euler 体系 — 同步到 DataView
+env._gym.sync_to_view()
+# Local 体系（老）— 同步到 data
+env.gym.update_data()
 
 # 现在再读数据就是正常的
 print(env.data.qpos)
@@ -52,16 +56,13 @@ print(env.data.qpos)
 
 ### Q: 步进后读到的是旧数据？
 
-确保 `do_simulation` 或 `update_data` 已调用：
-
 ```python
-# ✅ 方式 1
+# ✅ Euler 体系 — do_simulation 已自动同步
 env.do_simulation(ctrl, n_frames)
-data = env.data.qpos.copy()
+data = env.data.qpos     # 零拷贝视图，已是最新
 
-# ✅ 方式 2
-env.gym.mj_step(n_frames)
-env.gym.update_data()
+# ✅ Local 体系（老）— 需手动 update_data
+env.do_simulation(ctrl, n_frames)
 data = env.data.qpos.copy()
 ```
 
@@ -86,7 +87,18 @@ data = env.data.qpos.copy()
 
 ### Q: 如何自定义环境？
 
-继承 `OrcaGymLocalEnv` 并实现必需方法，参见 [自定义环境](environments/custom-env.md)。
+推荐继承 `OrcaGymEulerEnv`（新主路径），实现 `step()`、`reset_model()`、`_get_obs()` 方法。
+
+```python
+from orca_gym.environment.euler.orca_gym_euler_env import OrcaGymEulerEnv
+
+class MyEnv(OrcaGymEulerEnv):
+    def step(self, action): ...
+    def reset_model(self): ...
+    def _get_obs(self): ...
+```
+
+备选：继承 `OrcaGymLocalEnv`（老路径，维护模式）。
 
 ### Q: action_space 的维度怎么来的？
 
@@ -127,14 +139,25 @@ def _get_obs(self):
 | RSL-RL | Stable-Baselines3 / RLlib |
 | PhysX | MuJoCo (本地) |
 
-参见 [Isaac Gym 迁移指南](migration/isaac-gym-migration.md)。
-
 ### Q: 从原生 MuJoCo 环境迁移？
 
-OrcaGym 兼容 Gymnasium，原生 MuJoCo Gymnasium 环境只需：
+推荐使用 `OrcaGymEulerEnv`（新主路径）：
+1. 将基类改为 `OrcaGymEulerEnv`
+2. 使用 `env.data`（`OrcaGymDataView`）代替直接访问 `_mjData`
+3. 使用 `env.sim_config` 代替 `_mjModel.opt.*`
+4. 使用 `env.apply_body_force()` 代替直接写 `xfrc_applied`
 
-1. 将基类改为 `OrcaGymLocalEnv`
-2. 使用 `env.gym._mjModel` / `env.gym._mjData` 代替直接访问
+备选：使用 `OrcaGymLocalEnv`（老路径），保持 `env.gym._mjModel` / `env.gym._mjData` 访问方式。
+
+### Q: Euler 体系和 Local 体系有什么区别？
+
+| 维度 | Euler（推荐） | Local（老） |
+|------|-------------|-----------|
+| `env.gym` | ❌ 不存在 | ✅ 公共属性 |
+| 状态类型 | `OrcaGymDataView` | `OrcaGymData` |
+| 配置方式 | `env.sim_config` | `env.gym.opt` |
+| 外力注入 | `env.apply_body_force()` | 直接写 `xfrc_applied` |
+| 数据同步 | `do_simulation()` 自动 | 手动 `update_data()` |
 
 ## 其他
 
