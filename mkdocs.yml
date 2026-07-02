@@ -46,7 +46,7 @@ extra_css:
 
 nav:
   - 首页:
-    - 简介: index.md
+    - 简介: getting-started/index.md
     - 什么是 OrcaGym: getting-started/what-is-orcagym.md
     - 为什么选择 OrcaGym: getting-started/why-orcagym.md
     - 安装指南: getting-started/installation.md
