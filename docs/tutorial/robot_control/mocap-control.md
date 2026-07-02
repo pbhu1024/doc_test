@@ -39,7 +39,7 @@ env.mj_forward()
 ## 读取 Mocap 位姿
 
 ```python
-# 通过 env.data 读取 mocap 位姿（）
+# 通过 env.data 读取 mocap 位姿
 mocap_pos = env.data.mocap_pos("ActorManipulator_Anchor") # (3,)
 mocap_quat = env.data.mocap_quat("ActorManipulator_Anchor") # (4,)
 ```

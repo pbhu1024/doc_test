@@ -17,12 +17,12 @@ OrcaGym 使用 **Mocap 锚点 + 等式约束** 系统来操作物体：
 # 锚定物体
 env.anchor_actor("target_object", AnchorType.WELD)
 
-# 移动锚点
+# 移动锚点（mocap body 名称需在模型中存在）
 env.set_mocap_pos_and_quat({
- "ActorManipulator_Anchor" # mocap body 名称（模型需含此 body）: {
- "pos": np.array([0.5, 0.0, 0.8]),
- "quat": np.array([1.0, 0.0, 0.0, 0.0]),
- }
+    "ActorManipulator_Anchor": {
+        "pos": np.array([0.5, 0.0, 0.8]),
+        "quat": np.array([1.0, 0.0, 0.0, 0.0]),
+    }
 })
 
 # 释放
@@ -45,6 +45,6 @@ if body_name is not None:
 
 ```python
 # 计算物体的轴对齐包围盒
-bbox = env.get_goal_bounding_box("target_object") # 通用
+bbox = env.get_goal_bounding_box("target_object")
 print(f"包围盒: min={bbox['min']}, max={bbox['max']}, size={bbox['size']}")
 ```

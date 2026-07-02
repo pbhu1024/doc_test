@@ -91,21 +91,21 @@ frame_skip = 20 ← 每次 step() 物理引擎走几步
 dt = 0.001 × 20 = 0.02秒 ← 你的控制指令每隔多久更新一次（50Hz）
 ```
 
-### 环境类层次（推荐 ）
+### 环境类层次
 
 ```
 gymnasium.Env
- └── OrcaGymEulerEnv # 👈 推荐：
+ └── OrcaGymEulerEnv # 👈 推荐（当前主路径）
  ├── 组合 OrcaGymEuler 仿真核心
  ├── .data → OrcaGymDataView（完整状态零拷贝只读视图）
  ├── .model → OrcaGymModel（模型结构信息）
  ├── .sim_config → SimConfig（求解器配置）
  └── .ctrl → np.ndarray（当前控制输入）
 
- └── OrcaGymLocalEnv # ，维护模式，不推荐新项目使用
+ └── OrcaGymLocalEnv # 维护模式，不推荐新项目使用
 ```
 
-> **推荐 **：`OrcaGymEulerEnv` 是当前推荐的新入口。 `OrcaGymLocalEnv` 处于维护模式，逐步废弃。
+> **推荐**：`OrcaGymEulerEnv` 是当前推荐的新入口。 `OrcaGymLocalEnv` 处于维护模式，逐步废弃。
 > 可运行的完整示例见 [OrcaPlayground examples/euler/](https://github.com/OrcaGym/OrcaPlayground)。
 
 ---

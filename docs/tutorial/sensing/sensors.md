@@ -75,19 +75,18 @@ def read_joint_sensors(env):
 ⚠️ 传感器数据在 `mj_forward()` 或 `mj_step()` 后才会更新。
 
 ```python
-# ✅ 正确 — 
-env.do_simulation(ctrl, n_frames) # 自动 step + sync_to_view
-sensor = env.query_sensor_data(...) # 读最新值
+# ✅ 正确 — do_simulation 自动 step + sync_to_view
+env.do_simulation(ctrl, n_frames)
+sensor = env.query_sensor_data(...)     # 读最新值
 
 # ✅ 正确 — 手动步进
-env.mj_step(nstep) # step 包含 forward
-env._sync_view() 
+env.mj_step(nstep)                      # step 包含 forward
+env._sync_view()
 sensor = env.query_sensor_data(...)
 
-# ❌ 错误
+# ❌ 错误 — 修改状态后没有 forward
 env.set_joint_qpos(...)
-# 没有 forward → 传感器值可能是旧的
-sensor = env.query_sensor_data(...) # 旧数据
+sensor = env.query_sensor_data(...)     # 旧数据！还没 forward
 ```
 
 ## 传感器噪声

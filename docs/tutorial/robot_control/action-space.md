@@ -7,7 +7,7 @@
 OrcaGym 从 MuJoCo 执行器控制范围自动生成动作空间：
 
 ```python
-class MyEnv(OrcaGymLocalEnv):
+class MyEnv(OrcaGymEulerEnv):
     def __init__(self, ...):
         super().__init__(...)
         

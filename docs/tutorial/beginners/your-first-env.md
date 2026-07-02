@@ -32,8 +32,8 @@ _get_obs() — 收集观测数据
 
 ```python
 """
-my_first_env.py — 一个最小的自定义环境（）
-基于 OrcaPlayground examples/euler/01_hello_euler/simple_env.py 的简化版
+my_first_env.py — 一个最小的自定义环境
+基于 [OrcaPlayground examples/euler/01_hello_euler/](https://github.com/OrcaGym/OrcaPlayground) 的简化版
 """
 
 import numpy as np
@@ -211,7 +211,7 @@ def reset_model(self):
 - `self.init_qpos` / `self.init_qvel`：父类在 `initialize_simulation()` 后缓存的初始状态
 - `self.np_random`：父类通过 `set_seed_value()` 创建的随机数生成器
 
-### 环境生命周期（）
+### 环境生命周期
 
 ```
 MyFirstEnv(model_xml_path=..., skip_grpc_load=True)

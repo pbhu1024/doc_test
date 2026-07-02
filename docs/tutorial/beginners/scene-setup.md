@@ -16,7 +16,7 @@
 └── Material（材质） — 物体的颜色/纹理
 ```
 
-**关键概念**：`OrcaGymScene` 负责场景的**搭建**（添加/删除物体），`OrcaGymLocalEnv` 负责场景的**仿真**（物理步进）。
+**关键概念**：`OrcaGymScene` 负责场景的**搭建**（添加/删除物体），`OrcaGymEulerEnv` 负责场景的**仿真**（物理步进）。
 
 ---
 

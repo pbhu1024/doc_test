@@ -62,7 +62,7 @@ self.observation_space = self.generate_observation_space(obs)
 ## 观测归一化
 
 ```python
-class MyEnv(OrcaGymLocalEnv):
+class MyEnv(OrcaGymEulerEnv):
     def __init__(self, ...):
         super().__init__(...)
         

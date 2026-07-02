@@ -104,7 +104,7 @@ next_frame = env.get_next_frame()
 ## 在 RL 训练中使用相机
 
 ```python
-class VisionEnv(OrcaGymLocalEnv):
+class VisionEnv(OrcaGymEulerEnv):
  def __init__(self, ...):
  super().__init__(...)
  
