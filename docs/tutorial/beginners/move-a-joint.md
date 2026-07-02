@@ -1,157 +1,170 @@
 # 🦾 让机器人动起来 — 控制单个关节
 
-前面我们只是"看"，这一节开始**让机器人动起来**。我们从最简单的开始：理解 `qpos`/`qvel`，手动控制一个关节。
+前面我们只是"看"，这一节开始**让机器人动起来**。我们从最简单的开始：理解 `qpos`/`qvel`，手动控制关节。
+
+> 完整可运行代码见 [OrcaPlayground examples/euler/01_hello_euler/](https://github.com/OrcaGym/OrcaPlayground)。
 
 ---
 
-## 核心概念：qpos 和 qvel
+## 完整示例：先看全貌
 
-MuJoCo 用两个数组描述整个仿真世界的位置和速度：
-
-```
-qpos = [关节0角度, 关节1角度, ..., 关节N角度, 物体X, 物体Y, 物体Z, 物体qw, 物体qx, 物体qy, 物体qz]
-       └────── 机器人关节 ──────┘  └────────── 自由物体位姿 ──────────┘
-
-qvel = [关节0角速度, 关节1角速度, ..., 物体Vx, 物体Vy, 物体Vz, 物体ωx, 物体ωy, 物体ωz]
-```
-
-- `qpos` 的长度 = `env.model.nq`（广义坐标数）
-- `qvel` 的长度 = `env.model.nv`（自由度数量）
-
----
-
-## 方法 1：力矩控制（经过物理）⭐ 推荐
-
-真正的物理仿真应该用**力矩驱动**关节：
+下面是一个**可以直接运行**的完整示例，展示了三种控制和查询关节状态的方法。
+建议先通读一遍，再看后面的逐段解释。
 
 ```python
-def torque_drive_joint(env, joint_index: int = 0, steps: int = 200):
-    """
-    用恒定力矩驱动一个关节，观察它在重力+惯性下的运动。
+"""关节控制完整演示：力矩驱动 → 直接设位置 → 按名称设位置"""
+import time
+import numpy as np
+from gymnasium import spaces
+from orca_gym.environment.euler.orca_gym_euler_env import OrcaGymEulerEnv
 
-    这展示了"经过物理"的控制方式：
-    力矩 → 加速度 → 速度 → 位置（而不是直接设置位置）
-    """
 
-    # 获取力矩范围
-    ctrlrange = env.model.get_actuator_ctrlrange()
-    max_torque = ctrlrange[joint_index, 1]  # 该关节的最大力矩
+class JointControlDemo(OrcaGymEulerEnv):
+    """关节控制演示环境"""
 
-    print(f"关节 {joint_index} 力矩范围: [{ctrlrange[joint_index, 0]:.1f}, {max_torque:.1f}] N·m")
+    def __init__(self, model_xml_path, **kwargs):
+        super().__init__(
+            frame_skip=kwargs.pop("frame_skip", 5),
+            orcagym_addr=kwargs.pop("orcagym_addr", "localhost:50051"),
+            agent_names=kwargs.pop("agent_names", ["agent0"]),
+            time_step=kwargs.pop("time_step", 0.002),
+            model_xml_path=model_xml_path,
+            **kwargs,
+        )
 
-    for i in range(steps):
-        # 1. 构造力矩数组 —— 只有指定的关节有非零力矩
-        ctrl = np.zeros(env.model.nu, dtype=np.float64)
+    # ─── 方法 1：力矩驱动（经过物理）⭐ 推荐 ───
+    def demo_torque_drive(self, joint_index=0, steps=200):
+        """用恒定力矩驱动关节，观察它在重力+惯性下的自然运动。
 
-        # 2. 前半段正向力矩，后半段反向
-        if i < steps // 2:
-            ctrl[joint_index] = 0.3 * max_torque   # 30% 正向力矩
-        else:
-            ctrl[joint_index] = -0.3 * max_torque  # 30% 反向力矩
+        这是"经过物理"的方式：力矩 → 加速度 → 速度 → 位置
+        """
+        ctrlrange = self.model.get_actuator_ctrlrange()
+        max_torque = ctrlrange[joint_index, 1]
+        print(f"关节 {joint_index} 力矩范围: "
+              f"[{ctrlrange[joint_index, 0]:.1f}, {max_torque:.1f}] N·m")
 
-        # 3. 执行仿真步进（经过物理——do_simulation 自动同步 data）
-        env.do_simulation(ctrl, env.frame_skip)
+        for i in range(steps):
+            ctrl = np.zeros(self.model.nu, dtype=np.float64)
 
-        # 4. 渲染
-        env.render()
+            # 前半段正向力矩，后半段反向 → 观察往复运动
+            if i < steps // 2:
+                ctrl[joint_index] = 0.3 * max_torque   # 30% 正向
+            else:
+                ctrl[joint_index] = -0.3 * max_torque  # 30% 反向
 
-        if i % 20 == 0:
-            pos = env.data.qpos[joint_index]
-            vel = env.data.qvel[joint_index]
-            print(f"  Step {i:3d}: pos={pos:+.4f} rad, vel={vel:+.4f} rad/s, "
-                  f"torque={ctrl[joint_index]:+.2f} N·m")
-```
+            self.do_simulation(ctrl, self.frame_skip)
 
----
+            if i % 20 == 0:
+                pos = self.data.qpos[joint_index]
+                vel = self.data.qvel[joint_index]
+                print(f"  Step {i:3d}: pos={pos:+.4f} rad, "
+                      f"vel={vel:+.4f} rad/s, torque={ctrl[joint_index]:+.2f}")
 
-## 方法 2：直接设置关节位置（适合 reset）
+    # ─── 方法 2：直接设位置（正弦摆动，适合 reset）───
+    def demo_wiggle(self, joint_index=0, amplitude=0.5, steps=200):
+        """让关节做正弦摆动。直接设 qpos 方式，不经过物理。"""
+        print(f"关节 {joint_index} 初始位置: {self.data.qpos[joint_index]:.3f} rad")
 
-使用 `set_joint_qpos` 修改关节位置，然后 `mj_forward()`：
+        for i in range(steps):
+            target_angle = amplitude * np.sin(i * 0.1)
 
-```python
-def wiggle_joint(env, joint_index: int = 0, amplitude: float = 0.5, steps: int = 200):
-    """
-    让指定关节做正弦摆动。
+            # 合规写入：copy → 修改 → set → forward
+            new_qpos = self.data.qpos.copy()
+            new_qpos[joint_index] = target_angle
+            self.set_joint_qpos(new_qpos)
+            self.set_joint_qvel(np.zeros(self.model.nv))
+            self.mj_forward()
+            self._sync_view()
 
-    Args:
-        env: 环境实例
-        joint_index: qpos 中的关节索引
-        amplitude: 摆动幅度（弧度）
-        steps: 摆动步数
-    """
+            if i % 20 == 0:
+                actual = self.data.qpos[joint_index]
+                print(f"  Step {i:3d}: 目标={target_angle:+.3f}, "
+                      f"实际={actual:+.3f}")
 
-    print(f"关节 {joint_index} 初始位置: {env.data.qpos[joint_index]:.3f}")
-
-    for i in range(steps):
-        # 1. 用正弦波计算目标角度
-        target_angle = amplitude * np.sin(i * 0.1)
-
-        # 2. 构造新的 qpos 数组
-        new_qpos = env.data.qpos.copy()
-        new_qpos[joint_index] = target_angle
-
-        # 3. 设置 qpos 并清零速度
-        env.set_joint_qpos(new_qpos)
-        env.set_joint_qvel(np.zeros(env.model.nv))
-
-        # 4. mj_forward() 更新所有派生量（body位姿、传感器等）
-        env.mj_forward()
-        env._sync_view()
-
-        # 5. 渲染
-        env.render()
-        time.sleep(0.02)
-
-        if i % 20 == 0:
-            print(f"  Step {i:3d}: 目标={target_angle:+.3f}, "
-                  f"实际={env.data.qpos[joint_index]:+.3f}")
-
-    print(f"关节 {joint_index} 最终位置: {env.data.qpos[joint_index]:.3f}")
-```
-
-!!! warning "这个方法不经过物理！"
-    `set_joint_qpos()` 是**直接设置**位置——不经过力矩、不经过接触力、不考虑质量/惯性。
-    
-    这在**重置环境**时很有用（快速设定初始姿态），但在正常仿真中应该用**力矩控制**。
-
----
-
-## 方法 3：set_joint_qpos（按名称设置）
-
-当你知道关节的**名字**（而不是索引），用 `set_joint_qpos` 更方便：
-
-```python
-def set_named_joint(env, joint_name: str, target_angle: float):
-    """
-    按名称设置单个关节的位置。
-    """
-    # 构造新的 qpos（需要在全局 qpos 中修改正确的索引）
-    qpos = env.data.qpos.copy()
-    qpos_addr = env.jnt_qposadr(joint_name)
-    joint_type = env.model.get_joint_byname(joint_name)["Type"]
-
-    # 根据关节类型设置值
-    if joint_type == 3:  # HINGE
+    # ─── 方法 3：按名称设位置 ───
+    def demo_set_named_joint(self, joint_name, target_angle):
+        """按关节名称（而非索引）设置位置。"""
+        qpos = self.data.qpos.copy()
+        qpos_addr = self.jnt_qposadr(joint_name)
         qpos[qpos_addr] = target_angle
 
-    env.set_joint_qpos(qpos)
-    env.mj_forward()
-    env._sync_view()
+        self.set_joint_qpos(qpos)
+        self.mj_forward()
+        self._sync_view()
 
-    # 验证
-    actual = env.query_joint_qpos([joint_name])[joint_name]
-    print(f"{joint_name}: 目标={target_angle:.3f}, 实际={actual[0]:.3f}")
+        # 验证
+        actual = self.query_joint_qpos([joint_name])[joint_name]
+        print(f"{joint_name}: 目标={target_angle:.3f}, 实际={actual[0]:.3f}")
+
+    # ─── 工具：打印 qpos 布局 ───
+    def print_qpos_layout(self):
+        """打印 qpos 布局，帮助理解每个关节占几个元素"""
+        offset = 0
+        for i in range(self.model.njnt):
+            name = self.model.joint_id2name(i)
+            info = self.model.get_joint_byname(name)
+            nq = info.get("NQ", 1)
+            print(f"  qpos[{offset:2d}:{offset+nq:2d}]  {name}  (nq={nq})")
+            offset += nq
+
+    # ─── Gymnasium 接口 ───
+    def step(self, action):
+        self.do_simulation(action, self.frame_skip)
+        return self._get_obs(), 0.0, False, False, {}
+
+    def reset_model(self):
+        self.set_joint_qpos(self.init_qpos)
+        self.set_joint_qvel(self.init_qvel)
+        self.mj_forward()
+        self._sync_view()
+        return self._get_obs(), {}
+
+    def _get_obs(self):
+        return self.data.qpos.copy()
 
 
-# 用法
-set_named_joint(env, "robot_0_joint1", 0.5)
+if __name__ == "__main__":
+    env = JointControlDemo(
+        model_xml_path="/path/to/scene.xml",
+        skip_grpc_load=True,  # 离线模式
+    )
+    env.reset()
+
+    print("=" * 50)
+    print("1. 力矩驱动（经过物理）")
+    print("=" * 50)
+    env.demo_torque_drive(joint_index=0, steps=100)
+
+    print("\n" + "=" * 50)
+    print("2. 直接设位置（正弦摆动）")
+    print("=" * 50)
+    env.demo_wiggle(joint_index=0, amplitude=0.5, steps=100)
+
+    print("\n" + "=" * 50)
+    print("3. qpos 布局")
+    print("=" * 50)
+    env.print_qpos_layout()
+
+    env.close()
 ```
 
 ---
 
-## 理解 qpos 的布局
+## 逐段解释
 
-不同关节类型在 `qpos` 中占用的元素数量不同：
+### 核心概念：qpos 和 qvel
+
+MuJoCo 用两个数组描述整个仿真世界：
+
+```
+qpos = [关节0角度, 关节1角度, ..., 自由物体位姿(xyz+qwxyz)]
+       长度 = model.nq（广义坐标数）
+
+qvel = [关节0角速度, 关节1角速度, ..., 自由物体速度(v+ω)]
+       长度 = model.nv（自由度数）
+```
+
+不同关节类型在 qpos 中占的元素数不同：
 
 | 关节类型 | qpos 元素数 | 含义 |
 |----------|------------|------|
@@ -160,29 +173,66 @@ set_named_joint(env, "robot_0_joint1", 0.5)
 | `ball`（球） | 4 | 四元数 [w, x, y, z] |
 | `free`（自由） | 7 | [x, y, z, qw, qx, qy, qz] |
 
+### 方法 1：力矩驱动（推荐）⭐
+
 ```python
-def print_qpos_layout(env):
-    """打印 qpos 数组中每个关节的位置"""
-    offset = 0
-    for i in range(env.model.njnt):
-        name = env.model.joint_id2name(i)
-        joint_info = env.model.get_joint_byname(name)
-        nq = joint_info.get("NQ", 1)  # 关节在 qpos 中的元素数
-        print(f"qpos[{offset:2d}:{offset+nq:2d}]  {name}  (nq={nq})")
-        offset += nq
+ctrl = np.zeros(env.model.nu)
+ctrl[joint_index] = 0.3 * max_torque   # 施加 30% 最大力矩
+env.do_simulation(ctrl, env.frame_skip)
 ```
 
----
+**原理**：力矩 → 加速度 → 速度 → 位置。这是"经过物理"的方式——关节在
+重力、惯性、摩擦力等物理效应下自然运动，而非瞬移到目标位置。
 
-## 安全提示
+**适用场景**：正常的仿真控制、RL 训练。这是**推荐的标准方式**。
 
-- 设置过大的关节角度可能导致**自碰撞**（机械臂打到自己）
+### 方法 2：直接设位置（适合 reset）
+
+```python
+qpos = env.data.qpos.copy()        # 1. 复制
+qpos[joint_index] = target_angle   # 2. 修改副本
+env.set_joint_qpos(qpos)           # 3. 合规写入
+env.mj_forward()                   # 4. 必须！更新派生量
+env._sync_view()                   # 5. 同步到 DataView
+```
+
+> ⚠️ **这个方法不经过物理！** 关节瞬移到目标角度，不经历加速/减速过程。
+> 适用场景：**重置环境**（快速设定初始姿态）、调试。
+
+### 方法 3：按名称设位置
+
+```python
+qpos = env.data.qpos.copy()
+addr = env.jnt_qposadr("robot_0_joint1")  # 按名称查地址
+qpos[addr] = target_angle
+env.set_joint_qpos(qpos)
+env.mj_forward()
+```
+
+当你知道关节**名字**（而非索引）时使用。`jnt_qposadr(name)` 返回该关节在
+qpos 数组中的起始地址。
+
+### 状态写入的黄金法则
+
+```
+1. copy()  ← 复制当前 qpos（data.qpos 是只读零拷贝视图）
+2. 修改副本
+3. set_joint_qpos(qpos_copy)  ← 合规写入
+4. mj_forward()               ← 必须！更新派生量
+5. _sync_view()               ← 同步到 DataView
+```
+
+跳过第 4 步 → body 位姿/传感器读到的仍是旧值。
+
+### 安全提示
+
+- 设置过大的关节角度可能导致**自碰撞**
 - 设置过大的力矩可能导致仿真**不稳定**（数值爆炸）
-- 建议先用小幅度（±0.5 弧度以内）测试
+- 建议先用小幅度（±0.5 rad 以内）测试
 - 仿真中损坏没有后果——大胆试！
 
 ---
 
 ## 下一步
 
-你已经能让关节动起来了。接下来学习**如何获取相机图像**：[📷 相机与视觉](camera-and-vision.md)。
+能控制关节了。接下来学习如何**写 PD 控制器**：[🎮 简单控制器](simple-controller.md)。
