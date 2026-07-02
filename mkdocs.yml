@@ -45,12 +45,13 @@ extra_css:
   - extra.css
 
 nav:
-  - 首页:
+  - 简介:
     - 什么是 OrcaGym: getting-started/what-is-orcagym.md
     - 为什么选择 OrcaGym: getting-started/why-orcagym.md
     - 安装指南: getting-started/installation.md
   - 核心概念:
     - 概览: core_concepts/index.md
+    - 架构概览: core_concepts/architecture-overview.md
     - 系统架构: core_concepts/architecture.md
     - Gym 接口: core_concepts/gym-interface.md
     - 数据流: core_concepts/data-flow.md
