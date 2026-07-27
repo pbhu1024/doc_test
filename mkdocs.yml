@@ -146,9 +146,6 @@ extra:
 
 plugins:
   - search
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: datetime
   - i18n:
       docs_structure: folder          # 推荐用 suffix（也支持 folder）
       languages:
@@ -159,4 +156,7 @@ plugins:
         - locale: en
           name: English
           build: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: datetime
 
