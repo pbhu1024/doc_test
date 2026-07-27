@@ -223,10 +223,6 @@ plugins:
               - Utilities: api_reference/utils.md
             - FAQ:
               - FAQ: faq/faq.md
-                  - locale: en
-                    name: English
-                    site_name: OrcaGym Documentation
-                    build: true
   - git-revision-date-localized:
       enable_creation_date: true
       type: datetime
