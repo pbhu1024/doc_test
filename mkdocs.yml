@@ -5,6 +5,7 @@ repo_url: https://github.com/pbhu1024/doc_test
 
 theme:
   name: material
+  language: zh 
   icon:
     logo: material/robot-outline
     repo: fontawesome/brands/github
@@ -148,3 +149,14 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
       type: datetime
+  - i18n:
+      docs_structure: folder          # 推荐用 suffix（也支持 folder）
+      languages:
+        - locale: zh
+          default: true
+          name: 简体中文
+          build: true
+        - locale: en
+          name: English
+          build: true
+
